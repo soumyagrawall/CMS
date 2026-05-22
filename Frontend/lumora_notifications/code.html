@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f9f9f9;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#acc8f3",
+                      "tertiary-fixed-dim": "#c9c6be",
+                      "secondary-container": "#b7d3fe",
+                      "surface": "#f9f9f9",
+                      "inverse-primary": "#a8c8ff",
+                      "surface-variant": "#e2e2e2",
+                      "surface-container": "#eeeeee",
+                      "primary-fixed": "#d5e3ff",
+                      "background": "#f9f9f9",
+                      "primary": "#30578f",
+                      "outline-variant": "#c3c6d1",
+                      "on-primary-fixed": "#001b3c",
+                      "on-secondary-fixed-variant": "#2b486c",
+                      "on-surface-variant": "#434750",
+                      "surface-bright": "#f9f9f9",
+                      "secondary": "#446085",
+                      "on-tertiary-container": "#f6f3ea",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#a8c8ff",
+                      "on-background": "#1b1b1b",
+                      "inverse-on-surface": "#f1f1f1",
+                      "surface-container-highest": "#e2e2e2",
+                      "tertiary-container": "#706f68",
+                      "surface-tint": "#385f97",
+                      "secondary-fixed": "#d3e3ff",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#303030",
+                      "on-secondary-container": "#3f5b80",
+                      "on-primary-container": "#f0f3ff",
+                      "surface-container-high": "#e8e8e8",
+                      "tertiary-fixed": "#e5e2d9",
+                      "outline": "#737781",
+                      "surface-container-low": "#f3f3f3",
+                      "on-primary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "on-secondary": "#ffffff",
+                      "surface-dim": "#dadada",
+                      "on-surface": "#1b1b1b",
+                      "on-tertiary-fixed-variant": "#484741",
+                      "on-secondary-fixed": "#001c39",
+                      "error-container": "#ffdad6",
+                      "tertiary": "#575750",
+                      "on-primary-fixed-variant": "#1c477d",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed": "#1c1c17",
+                      "primary-container": "#4a70a9",
+                      "on-tertiary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "margin-desktop": "64px",
+                      "gutter-lg": "24px",
+                      "unit": "4px",
+                      "max-width": "1440px",
+                      "gutter-xs": "8px",
+                      "gutter-md": "16px"
+              },
+              "fontFamily": {
+                      "body-md": ["DM Sans"],
+                      "label-md": ["DM Sans"],
+                      "headline-lg-mobile": ["Playfair Display"],
+                      "label-sm": ["DM Sans"],
+                      "body-lg": ["DM Sans"],
+                      "headline-md": ["Playfair Display"],
+                      "display-lg": ["Playfair Display"],
+                      "headline-lg": ["Playfair Display"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<link href="/assets/css/lumora-tailwind.css" rel="stylesheet"/></head>
+<body class="font-body-md text-on-surface bg-background">
+<!-- Desktop Side Navigation -->
+<aside class="hidden md:flex h-screen w-[220px] fixed left-0 top-0 flex-col border-r border-outline-variant py-gutter-lg px-gutter-md justify-between bg-surface z-50">
+<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-1">
+<span class="text-headline-md font-headline-md font-bold text-primary tracking-tight">Lumora</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Editorial Curation</span>
+</div>
+<nav class="flex flex-col gap-2">
+<!-- Feed -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Feed</span>
+</a>
+<!-- Explore -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-md text-label-md">Explore</span>
+</a>
+<!-- Create -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="add_box">add_box</span>
+<span class="font-label-md text-label-md">Create</span>
+</a>
+<!-- Notifications (ACTIVE) -->
+<a class="flex items-center gap-3 px-3 py-2 text-primary font-bold border-r-2 border-primary hover:bg-surface-container-low transition-colors duration-200 scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+<!-- Profile -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+<!-- Settings -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Mobile Top App Bar -->
+<header class="flex md:hidden justify-between items-center w-full px-margin-mobile h-16 sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant">
+<span class="font-headline-md text-headline-md font-bold text-primary">Lumora</span>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all opacity-80 active:opacity-100">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container">
+<img alt="User avatar" data-alt="A close-up professional portrait of a woman with a serene expression, set against a soft-focus studio background. The lighting is warm and directional, highlighting the natural textures of her skin and the high-end, editorial aesthetic of the Lumora platform's brand identity. The color palette is composed of soft creams and muted secondary tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb4j8ZN9PUvrra1zCkOykpjVjOibVRm7J26U7uCfRkHMRQ1ys0juRGjpnJADER9pG6li2qI_-z_LvAqA4ow_4tz7uXPA1zF44lmJTjU6ReAV9RQTDveO9t5MgJLXj6qISsf_iDtQ69ig-2VO_ReLaQtTDAzHqG62sc5Un2CPHOkNWjDUgwetjwk2ylZpFFQkEM-0dMoFhKTSukYGd07SGmY9w1a7ZsKuqGlbD1sjkCYVzTzp1bR45L4YRpmrBMF6Qz-nx853yhJY4"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="md:ml-[220px] min-h-screen px-margin-mobile md:px-margin-desktop py-12 max-w-[1000px]">
+<header class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-background mb-2">Notifications</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Stay connected with your creative circle.</p>
+</div>
+<button class="flex items-center gap-2 px-6 py-3 border border-outline-variant rounded-lg text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="done_all">done_all</span>
+                Mark all as read
+            </button>
+</header>
+<!-- Notification List -->
+<div class="flex flex-col gap-4">
+<!-- Section Title -->
+<h2 class="font-label-sm text-label-sm text-on-tertiary-fixed-variant uppercase tracking-widest mb-2 px-2">New</h2>
+<!-- Unread Notification (Like) -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-start gap-4 hover:shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200 cursor-pointer">
+<div class="absolute left-[-10px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(68,96,133,0.4)]"></div>
+<div class="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-black/5">
+<img alt="Sarah liked your post" data-alt="A warm, cinematic portrait of a creative individual with a thoughtful expression. The lighting is low-key and soft, suggesting a sunset glow in an urban studio setting. The image uses a palette of soft creams and deep blues to align with the Lumora editorial brand, maintaining a high-contrast but sophisticated appearance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0_mfCT6KiA6TBbdiXNMvN0bPrJKfEHzwbfECuiXdM_scMJBnr3df9MzYgY0EzbZboqlaTq9NvDBSk__5zFx0kKyuD6FtKBmPvjbz8lYRsTi3yCSKtzrFhiUR78oORdT-pvOReCJg_gE28cHyVpirh11SmKo6eLid-a6jmir7owb7gpxkFmb3CRTYcsvDpcqJM-fy2RwiLaaJrmTB3bou_wyhPDSHoP6ggL_fa4gmoL_A8nOFgzseJ--xkuIVr_glkI3fUz2ikv0Y"/>
+</div>
+<div class="flex-grow">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold">Julian V.</span> liked your post <span class="italic text-on-surface-variant">"The Architecture of Silence"</span>
+</p>
+<span class="font-label-md text-label-md text-on-surface-variant mt-1 block">2 minutes ago</span>
+</div>
+<div class="w-16 h-16 rounded-lg overflow-hidden border border-black/5 flex-shrink-0 hidden sm:block">
+<img alt="Thumbnail" data-alt="A minimalist architectural photograph of a brutalist concrete building against a clear blue sky. The composition is geometric and sharp, with deep shadows creating strong contrast. The image is framed as a small thumbnail, reflecting the curated, editorial quality of the Lumora content feed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD23Ag358DMn2Q9GX44p4DUG8n0P3S69qKQmnBBGXt3Nkwrt9Nmeb5AMfA9kJC5cwWXJEqRviOvN9BJLy7BaPqbnyYkQUG_1f11qd-m2oVqt4IinYSRAZwlCq5lnUBb7tAejRS9a6YloVUs_ISEoVZ1B6gRzlmLjVcXnUu6G4CjStqHkUu_VHeIdaqALzEPSgk2_C6TV9nZt98aHyaOWBJc09y4XLWAEbs3VinBQNUdPqGw5e4C7krkFvuvzOJW24WfSHuPsLeBNsw"/>
+</div>
+</div>
+<!-- Unread Notification (Comment) -->
+<div class="group relative bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex items-start gap-4 hover:shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200 cursor-pointer">
+<div class="absolute left-[-10px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(68,96,133,0.4)]"></div>
+<div class="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-black/5">
+<img alt="Commenter" data-alt="A vibrant and professional headshot of a woman laughing naturally. The lighting is bright and high-key, creating a clean, modern aesthetic. The background is a soft beige tone, complementing the warm, cream-based palette of the Lumora design system. The shot is polished and editorial in style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRXKIAHsgukvxtGMLliSPEAtCNhgibPDVnJVGvPzeNEwlLRLpP1UOnL04Y-3f48zUFZgVuKsIofVve_jGTNxvo_JsNV2fmw8SyEgPerUOX4V1Tbv-ky9oLi4xNFmmj_G-4_1UgcJmQ7wbCqKo_Yh19UHr047k7iZR8uH7PaUfIC0Goq20hUhRhzEKWYOFH_wO1ggHSE-XdaaIc0WWLWYPy0tW4yJqyFu-Cpt45RDouRe2aJwoLL82Vevts7Cj-BcX03s7fXycEYYg"/>
+</div>
+<div class="flex-grow">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold">Elena R.</span> commented: <span class="text-primary">"This perspective on light is truly inspiring..."</span>
+</p>
+<span class="font-label-md text-label-md text-on-surface-variant mt-1 block">15 minutes ago</span>
+</div>
+</div>
+<!-- Section Title -->
+<h2 class="font-label-sm text-label-sm text-on-tertiary-fixed-variant uppercase tracking-widest mt-8 mb-2 px-2">Earlier Today</h2>
+<!-- Read Notification (Follow) -->
+<div class="group bg-surface-container-low/50 border border-outline-variant/60 rounded-xl p-5 flex items-center justify-between gap-4 transition-all duration-200 cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-black/5">
+<img alt="New Follower" data-alt="A portrait of a male photographer with a vintage camera, set against a blurred artistic studio. The lighting is soft and moody, emphasizing a tactile, creative personality. The colors are earthy and warm, fitting the premium editorial mood of Lumora’s visual identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNN5z4hYutknRBLOMWlRhtgTBHzOcGWvsnlrX2os0dIFt1iwr5mY4RoACFJMC1rvgaMLMKx5fsATcfDAfCpI6nhjdQIwcUQrdaJbqS1Q5A0pxtMALz0iq_CI2htYx617axLKKTTbUbdfcZB1Z5Zfl1odlZiG82QSARvDQDJGQSvH8c03QTZxJsRO3S2kdTCsnLsmSuwDeifpZPI54yaIg2H81YCtG1GYPBoAYAEqm8qw6AkpLI1roiZOp-U-wxxqfCg8c7RvflTmM"/>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold">Marcus Chen</span> started following you.
+                        </p>
+<span class="font-label-md text-label-md text-on-surface-variant block">3 hours ago</span>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full font-label-md text-label-md transition-all hover:opacity-90">
+                    Follow Back
+                </button>
+</div>
+<!-- Read Notification (Like) -->
+<div class="group bg-surface-container-low/50 border border-outline-variant/60 rounded-xl p-5 flex items-start gap-4 transition-all duration-200 cursor-pointer">
+<div class="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-black/5">
+<img alt="User" data-alt="An editorial fashion-style portrait of a woman looking directly into the camera with confidence. The lighting is dramatic but soft, creating elegant shadows on a neutral background. The high-fashion feel and muted color scheme reflect the sophisticated Lumora curation aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdhBQ3wq-OTTOck-zIFo6QOEMf-3QKc5ftnAxGzTi86FrnSrDiKBhbFSRTB_aYoK-fnm8A25LvK2cZnDdti-XfQ0ZIpf9qB119prlkE24uws7u-HxRW_nX7miihiRHNHzPwZxfe2Xtmi1TeonzkkEdTEjHw_qbdw-hyAtXCGaR7J9UZ7Eo41Ug0vZ_uccscX6BlXQKo0Nt6lIEQM3aogl6HtmzNGW7QbQgFBSNi0vmEgazolATWexZdlJBADWjlTMhW7xsAtRPY9s"/>
+</div>
+<div class="flex-grow">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold">Sasha K.</span> and <span class="font-bold">12 others</span> liked your curated gallery.
+                    </p>
+<span class="font-label-md text-label-md text-on-surface-variant mt-1 block">5 hours ago</span>
+</div>
+<div class="w-16 h-16 rounded-lg overflow-hidden border border-black/5 flex-shrink-0 hidden sm:block">
+<div class="grid grid-cols-2 grid-rows-2 h-full w-full gap-[1px]">
+<div class="bg-surface-container-high h-full w-full"></div>
+<div class="bg-surface-container-highest h-full w-full"></div>
+<div class="bg-secondary-container h-full w-full"></div>
+<div class="bg-primary-container h-full w-full"></div>
+</div>
+</div>
+</div>
+<!-- Section Title -->
+<h2 class="font-label-sm text-label-sm text-on-tertiary-fixed-variant uppercase tracking-widest mt-8 mb-2 px-2">This Week</h2>
+<!-- Read Notification (Mention) -->
+<div class="group bg-surface-container-low/50 border border-outline-variant/60 rounded-xl p-5 flex items-start gap-4 transition-all duration-200 cursor-pointer">
+<div class="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-black/5">
+<img alt="User" data-alt="A stylish portrait of a young designer in a modern studio environment. The lighting is diffuse and warm, emphasizing clean lines and a professional but creative atmosphere. The color palette is restricted to soft greys and warm creams, matching the Lumora brand's quiet, focused interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXYbj-FukRV9szQ8LsF16zT2QKu_WG6AuERKg8VpqDFC-qCDuo3I4KGVf5A8v1AXPhxTWAoQ3fdUAqMZd39V830s1-sUdbD4QiNfSzidw2OXqxu_c61p52kZ62wWRiA4QySaGhsDh9glrE9GvwMyMHit_WuaSkCc0CHd_9Xo1rFPHlWe05SB7qLIIns3KyI7Qk_4UyRbcanUBcJQcitVQP6SwJ7Djsf2HttcdgbFOmJg8RgLWQbXbJZePAe9pCuBSpWBUEY6fkEq4"/>
+</div>
+<div class="flex-grow">
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-bold">Oliver Smith</span> mentioned you in a comment.
+                    </p>
+<div class="mt-2 pl-4 border-l-2 border-primary/20 italic text-on-surface-variant font-body-md text-body-md">
+                        "@username I think your latest study on typography perfectly aligns with this..."
+                    </div>
+<span class="font-label-md text-label-md text-on-surface-variant mt-2 block">2 days ago</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Navigation Bar -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface border-t border-outline-variant flex justify-around items-center px-4 z-50">
+<a class="flex flex-col items-center gap-1 text-on-surface-variant transition-all scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant transition-all scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant transition-all scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="add_box">add_box</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary transition-all scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="notifications" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant transition-all scale-98 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</a>
+</nav>
+<script src="/assets/js/lumora-api.js"></script></body></html>

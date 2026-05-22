@@ -1,0 +1,37 @@
+{
+  "name": "lumora-backend",
+  "version": "1.0.0",
+  "description": "Express and MySQL backend for Lumora social image generation platform.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "build:css": "tailwindcss -c tailwind.config.js -i ./src/styles/tailwind.css -o ../Frontend/assets/css/lumora-tailwind.css --minify",
+    "db:schema": "node scripts/run-schema.js"
+  },
+  "keywords": [
+    "express",
+    "mysql",
+    "jwt",
+    "mvc"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.1.1",
+    "mysql2": "^3.11.5",
+    "uuid": "^11.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "tailwindcss": "^3.4.17",
+    "nodemon": "^3.1.9"
+  }
+}
