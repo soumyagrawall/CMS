@@ -27,15 +27,15 @@ const searchAll = async (term, limit, offset) => {
 const searchTags = async (term, limit = 20) => {
   const like = `%${term.replace(/^#/, "").toLowerCase()}%`;
   try {
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       `SELECT t.id, t.name, COUNT(it.image_id) AS imageCount
        FROM tags t
        LEFT JOIN image_tags it ON it.tag_id = t.id
-       WHERE t.name LIKE :like
+       WHERE t.name LIKE ?
        GROUP BY t.id, t.name
        ORDER BY imageCount DESC, t.name ASC
-       LIMIT :limit`,
-      { like, limit }
+       LIMIT ?`,
+      [like, limit]
     );
     return rows;
   } catch (error) {

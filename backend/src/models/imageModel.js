@@ -67,7 +67,7 @@ const findById = async (id) => {
 
 const listFeed = async (viewerId, limit, offset) => {
   const vId = viewerId || 0;
-  const [rows] = await pool.execute(
+  const [rows] = await pool.query(
     `SELECT ${imageSelect},
             EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = ?) AS likedByMe,
             EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = ?) AS savedByMe
@@ -83,7 +83,7 @@ const listFeed = async (viewerId, limit, offset) => {
 
 const search = async (term, limit, offset) => {
   const like = `%${term}%`;
-  const [rows] = await pool.execute(
+  const [rows] = await pool.query(
     `SELECT DISTINCT ${imageSelect}
      FROM images i
      JOIN users u ON u.id = i.user_id

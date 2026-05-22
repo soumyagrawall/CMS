@@ -310,23 +310,122 @@
   };
 
   const wireSearch = () => {
+    const isExplore = currentPath() === "/explore";
+    const grid = document.querySelector(".masonry-container");
     const inputs = Array.from(document.querySelectorAll("input")).filter((input) =>
       (input.placeholder || "").toLowerCase().includes("search")
     );
+
+    const renderResults = (images) => {
+      if (!grid) return;
+      grid.innerHTML = "";
+      if (!images || images.length === 0) {
+        grid.innerHTML = "<p class='col-span-full text-center text-on-surface-variant p-8 w-full font-body-lg'>No matching inspirations found.</p>";
+        return;
+      }
+
+      images.forEach((image) => {
+        const aspect = ["aspect-tall", "aspect-portrait", "aspect-square", "aspect-landscape", "aspect-wide"][Math.floor(Math.random() * 5)];
+        const card = document.createElement("article");
+        card.className = "masonry-item bg-surface-container-lowest rounded-2xl border border-outline-variant overflow-hidden card-lift flex flex-col group";
+        
+        card.innerHTML = `
+<div class="overflow-hidden relative ${aspect}">
+  <a href="/post?id=${image.id}" class="block w-full h-full">
+    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="${image.title || 'Inspiration'}" src="${image.imageUrl || ''}">
+  </a>
+  <div class="absolute top-4 right-4 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+    <button class="bg-white/90 backdrop-blur-md p-2.5 rounded-full text-primary shadow-sm hover:scale-110 transition-transform" data-like="${image.id}">
+      <span class="material-symbols-outlined text-[20px]" data-icon="favorite">favorite</span>
+    </button>
+    <button class="bg-white/90 backdrop-blur-md p-2.5 rounded-full text-primary shadow-sm hover:scale-110 transition-transform" data-save="${image.id}">
+      <span class="material-symbols-outlined text-[20px]" data-icon="bookmark">bookmark</span>
+    </button>
+  </div>
+</div>
+<div class="p-5 flex flex-col gap-1">
+  <h3 class="font-headline-md text-headline-md text-on-surface font-bold">${image.title || 'Untitled'}</h3>
+  <div class="flex items-center justify-between mt-2">
+    <span class="font-label-sm text-label-sm text-primary font-bold tracking-wide uppercase">${image.aiStyle || 'Editorial'}</span>
+    <div class="flex items-center gap-2">
+      <span class="font-label-sm text-label-sm text-on-surface font-bold">@${image.username || 'creator'}</span>
+      <a href="/post?id=${image.id}" class="material-symbols-outlined text-primary text-[18px] font-bold hover:scale-110 transition-transform" data-icon="north_east">north_east</a>
+    </div>
+  </div>
+</div>
+        `;
+        grid.appendChild(card);
+      });
+
+      // Bind dynamic actions
+      grid.querySelectorAll("[data-like]").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            const res = await request(`/social/images/${btn.dataset.like}/like`, { method: "POST" });
+            showMessage(res.message);
+          } catch(err) { showMessage(err.message, "error"); }
+        });
+      });
+      grid.querySelectorAll("[data-save]").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            const res = await request(`/social/images/${btn.dataset.save}/save`, { method: "POST" });
+            showMessage(res.message);
+          } catch(err) { showMessage(err.message, "error"); }
+        });
+      });
+    };
+
+    const performSearch = async (query) => {
+      try {
+        const response = await request(`/search?q=${encodeURIComponent(query)}`);
+        const images = response.data.images || [];
+        if (isExplore) {
+          renderResults(images);
+        }
+        const count = images.length + (response.data.users?.length || 0) + (response.data.tags?.length || 0);
+        if (query) {
+          showMessage(`${count} inspirations found for "${query}".`);
+        }
+      } catch (error) {
+        showMessage(error.message, "error");
+      }
+    };
+
+    // Bind input search
     inputs.forEach((input) => {
       input.addEventListener("keydown", async (event) => {
-        if (event.key !== "Enter" || !input.value.trim()) return;
+        if (event.key !== "Enter") return;
         event.preventDefault();
-        try {
-          const response = await request(`/search?q=${encodeURIComponent(input.value.trim())}`);
-          const count =
-            (response.data.images?.length || 0) + (response.data.users?.length || 0) + (response.data.tags?.length || 0);
-          showMessage(`${count} results found for "${input.value.trim()}".`);
-        } catch (error) {
-          showMessage(error.message, "error");
-        }
+        await performSearch(input.value.trim());
       });
     });
+
+    // Bind category filter chips on the explore page
+    if (isExplore) {
+      const chips = document.querySelectorAll(".flex.items-center.gap-3.overflow-x-auto.scrollbar-hide button");
+      chips.forEach((chip) => {
+        chip.addEventListener("click", async () => {
+          // Highlight active chip
+          chips.forEach(c => {
+            c.className = "px-6 py-2.5 rounded-full bg-surface-container-low border border-outline-variant text-primary font-label-md text-label-md font-bold whitespace-nowrap hover:bg-surface-container transition-colors";
+          });
+          chip.className = "px-6 py-2.5 rounded-full bg-primary text-on-tertiary-container font-label-md text-label-md font-bold whitespace-nowrap shadow-sm";
+
+          const val = chip.textContent.trim();
+          const searchInput = inputs[0];
+          if (searchInput) {
+            searchInput.value = val === "All" ? "" : val;
+          }
+          await performSearch(val === "All" ? "" : val);
+        });
+      });
+
+      // Run initial load search (All)
+      performSearch("");
+    }
   };
 
   const wirePostDetail = () => {

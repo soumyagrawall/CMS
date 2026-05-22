@@ -55,13 +55,13 @@ const update = async (id, payload) => {
 
 const search = async (term, limit, offset) => {
   const like = `%${term}%`;
-  const [rows] = await pool.execute(
+  const [rows] = await pool.query(
     `SELECT ${publicFields}
      FROM users
-     WHERE username LIKE :like OR full_name LIKE :like
+     WHERE username LIKE ? OR full_name LIKE ?
      ORDER BY created_at DESC
-     LIMIT :limit OFFSET :offset`,
-    { like, limit, offset }
+     LIMIT ? OFFSET ?`,
+    [like, like, limit, offset]
   );
   return rows;
 };
