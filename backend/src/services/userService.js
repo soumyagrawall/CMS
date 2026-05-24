@@ -3,9 +3,9 @@ const AppError = require("../utils/AppError");
 const { isDatabaseUnavailable } = require("../utils/databaseError");
 const demoStore = require("../utils/demoStore");
 
-const getProfile = async (userId) => {
+const getProfile = async (userId, viewerId = null) => {
   try {
-    const user = await userModel.findById(userId);
+    const user = await userModel.findById(userId, viewerId);
     if (!user) throw new AppError("User not found", 404);
     return user;
   } catch (error) {
@@ -23,6 +23,16 @@ const updateProfile = async (userId, payload) => {
   }
 };
 
+const path = require("path");
+const env = require("../config/env");
+
+const fileToPublicUrl = (file) => {
+  if (file.location) return file.location;
+  if (file.path && (file.path.startsWith("http://") || file.path.startsWith("https://"))) return file.path;
+  const relative = path.relative(process.cwd(), file.path).replace(/\\/g, "/");
+  return `${env.apiBaseUrl}/${relative}`;
+};
+
 const searchUsers = async (term, limit, offset) => {
   try {
     return await userModel.search(term, limit, offset);
@@ -32,8 +42,14 @@ const searchUsers = async (term, limit, offset) => {
   }
 };
 
+const uploadAvatar = async (userId, file) => {
+  const avatarUrl = fileToPublicUrl(file);
+  return await updateProfile(userId, { avatarUrl });
+};
+
 module.exports = {
   getProfile,
   updateProfile,
-  searchUsers
+  searchUsers,
+  uploadAvatar
 };

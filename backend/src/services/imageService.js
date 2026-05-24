@@ -1,4 +1,5 @@
 const path = require("path");
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const env = require("../config/env");
 const imageModel = require("../models/imageModel");
 const analyticsModel = require("../models/analyticsModel");
@@ -78,13 +79,14 @@ const createGeneratedImage = async (userId, payload, imageUrl) => {
 
 const getImage = async (id, viewerId = null, ipAddress = null) => {
   try {
-    const image = await imageModel.findById(id);
+    const vId = viewerId || 0;
+    const image = await imageModel.findById(id, vId);
     if (!image) throw new AppError("Image not found", 404);
 
     await imageModel.incrementCounter(id, "view_count", 1);
     await analyticsModel.createEvent({ userId: viewerId, imageId: id, eventType: "view", ipAddress });
 
-    return imageModel.findById(id);
+    return imageModel.findById(id, vId);
   } catch (error) {
     if (isDatabaseUnavailable(error)) {
       const image = demoStore.getImage(id);
@@ -95,12 +97,55 @@ const getImage = async (id, viewerId = null, ipAddress = null) => {
   }
 };
 
-const listFeed = async (viewerId, limit, offset) => {
+const listFeed = async (viewerId, limit, offset, type = 'explore') => {
   try {
-    return await imageModel.listFeed(viewerId, limit, offset);
+    return await imageModel.listFeed(viewerId, limit, offset, type);
   } catch (error) {
     if (isDatabaseUnavailable(error)) {
-      return demoStore.getImages().slice(offset, offset + limit);
+      const allImages = demoStore.getImages();
+      let filtered;
+      if (type === 'followed') {
+        filtered = allImages.filter(img => img.id % 2 === 1);
+      } else {
+        filtered = allImages.filter(img => img.id % 2 === 0);
+      }
+      return filtered.slice(offset, offset + limit);
+    }
+    throw error;
+  }
+};
+
+const deleteImage = async (id, userId) => {
+  try {
+    const image = await imageModel.findById(id);
+    if (!image) throw new AppError("Image not found", 404);
+    if (Number(image.userId) !== Number(userId)) {
+      throw new AppError("You can only delete your own creations", 403);
+    }
+    await imageModel.softDelete(id);
+
+    if (image.imageUrl && image.imageUrl.includes("amazonaws.com")) {
+      try {
+        const s3 = new S3Client({
+          credentials: {
+            accessKeyId: env.aws.accessKeyId,
+            secretAccessKey: env.aws.secretAccessKey,
+          },
+          region: env.aws.region,
+        });
+        const urlObj = new URL(image.imageUrl);
+        const key = urlObj.pathname.substring(1);
+        await s3.send(new DeleteObjectCommand({
+          Bucket: env.aws.bucketName,
+          Key: key
+        }));
+      } catch (s3Err) {
+        console.error("Failed to delete from S3:", s3Err.message);
+      }
+    }
+  } catch (error) {
+    if (isDatabaseUnavailable(error)) {
+      return;
     }
     throw error;
   }
@@ -110,5 +155,6 @@ module.exports = {
   createUploadedImage,
   createGeneratedImage,
   getImage,
-  listFeed
+  listFeed,
+  deleteImage
 };

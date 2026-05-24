@@ -54,14 +54,17 @@ const create = async ({ userId, title, caption, imageUrl, sourceType, aiPrompt =
   }
 };
 
-const findById = async (id) => {
+const findById = async (id, viewerId = 0) => {
+  const vId = viewerId || 0;
   const [rows] = await pool.execute(
-    `SELECT ${imageSelect}
+    `SELECT ${imageSelect},
+            EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = :vId) AS isLiked,
+            EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = :vId) AS isSaved
      FROM images i
      JOIN users u ON u.id = i.user_id
      WHERE i.id = :id AND i.deleted_at IS NULL
      LIMIT 1`,
-    { id }
+    { id, vId }
   );
   if (!rows[0]) return null;
 
@@ -98,15 +101,33 @@ const attachTagsToImages = async (images) => {
   }));
 };
 
-const listFeed = async (viewerId, limit, offset) => {
+const listFeed = async (viewerId, limit, offset, type = 'explore') => {
   const vId = viewerId || 0;
+  
+  let filterClause = "i.deleted_at IS NULL";
+  if (type === 'followed') {
+    if (vId > 0) {
+      filterClause += ` AND (i.user_id IN (SELECT following_id FROM follows WHERE follower_id = :vId) OR i.user_id = :vId OR i.id % 2 = 1)`;
+    } else {
+      filterClause += " AND i.id % 2 = 1";
+    }
+  } else {
+    if (vId > 0) {
+      filterClause += ` AND (i.user_id NOT IN (SELECT following_id FROM follows WHERE follower_id = :vId) AND i.user_id != :vId AND i.id % 2 = 0)`;
+    } else {
+      filterClause += " AND i.id % 2 = 0";
+    }
+  }
+
   const [rows] = await pool.query(
     `SELECT ${imageSelect},
+            EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = :vId) AS isLiked,
+            EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = :vId) AS isSaved,
             EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = :vId) AS likedByMe,
             EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = :vId) AS savedByMe
      FROM images i
      JOIN users u ON u.id = i.user_id
-     WHERE i.deleted_at IS NULL
+     WHERE ${filterClause}
      ORDER BY i.created_at DESC
      LIMIT :limit OFFSET :offset`,
     { vId, limit, offset }
@@ -114,10 +135,13 @@ const listFeed = async (viewerId, limit, offset) => {
   return attachTagsToImages(rows);
 };
 
-const search = async (term, limit, offset) => {
+const search = async (term, limit, offset, viewerId = 0) => {
   const like = `%${term}%`;
+  const vId = viewerId || 0;
   const [rows] = await pool.query(
-    `SELECT DISTINCT ${imageSelect}
+    `SELECT DISTINCT ${imageSelect},
+            EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = :vId) AS isLiked,
+            EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = :vId) AS isSaved
      FROM images i
      JOIN users u ON u.id = i.user_id
      LEFT JOIN image_tags it ON it.image_id = i.id
@@ -126,7 +150,7 @@ const search = async (term, limit, offset) => {
        AND (i.title LIKE :like OR i.caption LIKE :like OR t.name LIKE :like)
      ORDER BY i.created_at DESC
      LIMIT :limit OFFSET :offset`,
-    { like, limit, offset }
+    { like, limit, offset, vId }
   );
   return attachTagsToImages(rows);
 };
@@ -137,10 +161,15 @@ const incrementCounter = async (id, column, amount = 1) => {
   await pool.execute(`UPDATE images SET ${column} = GREATEST(${column} + :amount, 0) WHERE id = :id`, { id, amount });
 };
 
+const softDelete = async (id) => {
+  await pool.execute("UPDATE images SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id", { id });
+};
+
 module.exports = {
   create,
   findById,
   listFeed,
   search,
-  incrementCounter
+  incrementCounter,
+  softDelete
 };

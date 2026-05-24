@@ -2,13 +2,15 @@ const express = require("express");
 const imageController = require("../controllers/imageController");
 const validate = require("../middleware/validate");
 const { authenticate, optionalAuthenticate } = require("../middleware/authMiddleware");
-const { uploadImage } = require("../middleware/uploadMiddleware");
+const { uploadImage, validateMagicBytes } = require("../middleware/uploadMiddleware");
 const imageValidation = require("../validations/imageValidation");
 
 const router = express.Router();
 
 router.get("/feed", optionalAuthenticate, validate(imageValidation.feed), imageController.feed);
-router.post("/upload", authenticate, uploadImage, validate(imageValidation.createUpload), imageController.upload);
+router.get("/search", optionalAuthenticate, imageController.searchImages);
+router.post("/upload", authenticate, uploadImage, validateMagicBytes, validate(imageValidation.createUpload), imageController.upload);
 router.get("/:id", optionalAuthenticate, validate(imageValidation.imageId), imageController.getImage);
+router.delete("/:id", authenticate, validate(imageValidation.imageId), imageController.deleteImage);
 
 module.exports = router;

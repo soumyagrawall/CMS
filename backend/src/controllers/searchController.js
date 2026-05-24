@@ -5,7 +5,8 @@ const { getPagination } = require("../utils/pagination");
 
 const searchAll = asyncHandler(async (req, res) => {
   const { page, limit, offset } = getPagination(req.validated.query);
-  const results = await searchService.searchAll(req.validated.query.q, limit, offset);
+  const userId = req.user ? req.user.id : null;
+  const results = await searchService.searchAll(req.validated.query.q, limit, offset, userId);
   success(res, results, "Search results", 200, { page, limit });
 });
 

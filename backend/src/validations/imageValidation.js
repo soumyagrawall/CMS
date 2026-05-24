@@ -33,7 +33,8 @@ const feed = z.object({
   body: z.object({}).passthrough(),
   query: z.object({
     page: z.coerce.number().optional(),
-    limit: z.coerce.number().optional()
+    limit: z.coerce.number().optional(),
+    type: z.string().optional()
   }),
   params: z.object({})
 });

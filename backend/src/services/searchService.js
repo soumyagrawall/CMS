@@ -4,10 +4,10 @@ const { pool } = require("../config/database");
 const { isDatabaseUnavailable } = require("../utils/databaseError");
 const demoStore = require("../utils/demoStore");
 
-const searchAll = async (term, limit, offset) => {
+const searchAll = async (term, limit, offset, viewerId = null) => {
   try {
     const [images, users, tags] = await Promise.all([
-      imageModel.search(term, limit, offset),
+      imageModel.search(term, limit, offset, viewerId),
       userModel.search(term, limit, offset),
       searchTags(term, limit)
     ]);

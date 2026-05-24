@@ -31,7 +31,6 @@ if (
     storage = multerS3({
       s3: s3,
       bucket: env.aws.bucketName,
-      acl: "public-read",
       contentType: multerS3.AUTO_CONTENT_TYPE,
       key: (req, file, cb) => {
         const extension = path.extname(file.originalname).toLowerCase();
@@ -74,7 +73,28 @@ const uploadImage = multer({
   }
 }).single("image");
 
+const { fileTypeFromFile } = require("file-type");
+
+const validateMagicBytes = async (req, res, next) => {
+  if (!req.file) return next();
+  
+  try {
+    if (req.file.path) {
+      const type = await fileTypeFromFile(req.file.path);
+      if (!type || !type.mime.startsWith("image/")) {
+        const fs = require("fs");
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        return next(new AppError("Invalid file signature. Only actual images are allowed.", 400));
+      }
+    }
+    next();
+  } catch (err) {
+    return next(new AppError("Failed to validate file type", 500));
+  }
+};
+
 module.exports = {
   uploadImage,
+  validateMagicBytes,
   isS3Mode: () => isS3
 };

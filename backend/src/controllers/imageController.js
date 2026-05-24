@@ -16,13 +16,29 @@ const getImage = asyncHandler(async (req, res) => {
 
 const feed = asyncHandler(async (req, res) => {
   const { page, limit, offset } = getPagination(req.validated.query);
+  const type = req.validated.query.type || 'explore';
   const userId = req.user ? req.user.id : null;
-  const images = await imageService.listFeed(userId, limit, offset);
+  const images = await imageService.listFeed(userId, limit, offset, type);
   success(res, { images }, "Feed loaded", 200, { page, limit });
+});
+
+const deleteImage = asyncHandler(async (req, res) => {
+  await imageService.deleteImage(req.validated.params.id, req.user.id);
+  success(res, null, "Image deleted");
+});
+
+const searchImages = asyncHandler(async (req, res) => {
+  const { page, limit, offset } = getPagination(req.query);
+  const term = req.query.q || '';
+  const viewerId = req.user ? req.user.id : null;
+  const images = await imageService.search(term, limit, offset, viewerId);
+  success(res, { images }, "Search results loaded", 200, { page, limit });
 });
 
 module.exports = {
   upload,
   getImage,
-  feed
+  feed,
+  deleteImage,
+  searchImages
 };

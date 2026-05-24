@@ -21,7 +21,8 @@ import {
   Compass,
   ArrowUpRight,
   User,
-  Settings
+  Settings,
+  LayoutGrid
 } from 'lucide-react';
 import { api } from './services/api';
 import MasonryGrid from './components/MasonryGrid';
@@ -42,6 +43,7 @@ export default function App() {
   const [images, setImages] = useState([]);
   const [filteredImages, setFilteredImages] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [followedUserIds, setFollowedUserIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
 
@@ -71,6 +73,8 @@ export default function App() {
   const [settingsWebsite, setSettingsWebsite] = useState('');
   const [settingsLocation, setSettingsLocation] = useState('');
   const [settingsMessage, setSettingsMessage] = useState('');
+  const [settingsAvatarPreview, setSettingsAvatarPreview] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   
   const [supportEmail, setSupportEmail] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
@@ -83,14 +87,14 @@ export default function App() {
     } else {
       setCurrentView('explore');
     }
-    loadFeed();
   }, [user]);
 
   // Load feed/explore images
-  const loadFeed = async () => {
+  const loadFeed = async (view = currentView) => {
     setLoading(true);
     try {
-      const data = await api.getFeed();
+      const type = view === 'feed' ? 'followed' : 'explore';
+      const data = await api.getFeed(type);
       const loaded = data.images || [];
       setImages(loaded);
       setFilteredImages(loaded);
@@ -112,6 +116,9 @@ export default function App() {
     try {
       const data = await api.search(searchQuery.trim());
       setFilteredImages(data.images || []);
+      if (currentView !== 'feed' && currentView !== 'explore') {
+        setCurrentView('explore');
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -126,7 +133,9 @@ export default function App() {
     try {
       const data = await api.search(tag);
       setFilteredImages(data.images || []);
-      setCurrentView(user ? 'feed' : 'explore');
+      if (currentView !== 'feed' && currentView !== 'explore') {
+        setCurrentView('explore');
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -144,13 +153,13 @@ export default function App() {
       const res = await api.likeImage(imageId);
       setImages(prev => prev.map(img => img.id === imageId ? {
         ...img,
-        likeCount: res.isLiked ? img.likeCount + 1 : Math.max(0, img.likeCount - 1),
-        isLiked: res.isLiked
+        likeCount: res.liked ? img.likeCount + 1 : Math.max(0, img.likeCount - 1),
+        isLiked: res.liked
       } : img));
       setFilteredImages(prev => prev.map(img => img.id === imageId ? {
         ...img,
-        likeCount: res.isLiked ? img.likeCount + 1 : Math.max(0, img.likeCount - 1),
-        isLiked: res.isLiked
+        likeCount: res.liked ? img.likeCount + 1 : Math.max(0, img.likeCount - 1),
+        isLiked: res.liked
       } : img));
     } catch (err) {
       console.error(err);
@@ -167,13 +176,13 @@ export default function App() {
       const res = await api.saveImage(imageId);
       setImages(prev => prev.map(img => img.id === imageId ? {
         ...img,
-        saveCount: res.isSaved ? img.saveCount + 1 : Math.max(0, img.saveCount - 1),
-        isSaved: res.isSaved
+        saveCount: res.saved ? img.saveCount + 1 : Math.max(0, img.saveCount - 1),
+        isSaved: res.saved
       } : img));
       setFilteredImages(prev => prev.map(img => img.id === imageId ? {
         ...img,
-        saveCount: res.isSaved ? img.saveCount + 1 : Math.max(0, img.saveCount - 1),
-        isSaved: res.isSaved
+        saveCount: res.saved ? img.saveCount + 1 : Math.max(0, img.saveCount - 1),
+        isSaved: res.saved
       } : img));
     } catch (err) {
       console.error(err);
@@ -292,7 +301,13 @@ export default function App() {
   const loadNotifications = async () => {
     try {
       const data = await api.getNotifications();
-      setNotifications(data.notifications || []);
+      const notifs = data.notifications || [];
+      setNotifications(notifs);
+      
+      const followed = notifs.filter(n => n.isFollowing).map(n => n.actorId);
+      if (followed.length > 0) {
+        setFollowedUserIds(prev => [...new Set([...prev, ...followed])]);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -328,12 +343,34 @@ export default function App() {
       setSettingsBio(profile.bio || '');
       setSettingsWebsite(profile.website || '');
       setSettingsLocation(profile.location || '');
+      setSettingsAvatarPreview(profile.avatarUrl || null);
+
+      // Load both feeds in parallel to merge and deduplicate so saved and created items from both feeds load correctly
+      const [followedData, exploreData] = await Promise.all([
+        api.getFeed('followed'),
+        api.getFeed('explore')
+      ]);
+
+      const followedList = followedData.images || [];
+      const exploreList = exploreData.images || [];
+
+      const combinedMap = new Map();
+      followedList.forEach(img => combinedMap.set(img.id, img));
+      exploreList.forEach(img => combinedMap.set(img.id, img));
+
+      const mergedList = Array.from(combinedMap.values());
+      
+      setImages(mergedList);
+      setFilteredImages(mergedList);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
+    if (currentView === 'feed' || currentView === 'explore') {
+      loadFeed(currentView);
+    }
     if (currentView === 'notifications') {
       loadNotifications();
     }
@@ -413,96 +450,96 @@ export default function App() {
               <>
                 <button
                   onClick={() => { setCurrentView('feed'); setSearchQuery(''); setFilteredImages(images); }}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
                     currentView === 'feed'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <Home className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Feed</span>
+                  <span className="text-xs font-bold">Feed</span>
                 </button>
 
                 <button
                   onClick={() => { setCurrentView('explore'); setSearchQuery(''); setFilteredImages(images); }}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
                     currentView === 'explore'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <Compass className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Explore</span>
+                  <span className="text-xs font-bold">Explore</span>
                 </button>
 
                 <button
                   onClick={() => setCurrentView('create')}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
                     currentView === 'create'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <Plus className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Create</span>
+                  <span className="text-xs font-bold">Create</span>
                 </button>
 
                 <button
                   onClick={() => setCurrentView('notifications')}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 relative ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full relative ${
                     currentView === 'notifications'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <Bell className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Notifications</span>
+                  <span className="text-xs font-bold">Notifications</span>
                   {notifications.some(n => !n.readAt) && (
-                    <span className="absolute top-2.5 right-3 h-2 w-2 bg-primary rounded-full ring-2 ring-white"></span>
+                    <span className="absolute top-2.5 right-3.5 h-2 w-2 bg-primary rounded-full ring-2 ring-white animate-pulse"></span>
                   )}
                 </button>
 
                 <button
                   onClick={() => setCurrentView('profile')}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
                     currentView === 'profile'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <User className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Profile</span>
+                  <span className="text-xs font-bold">Profile</span>
                 </button>
 
                 <button
                   onClick={() => setCurrentView('settings')}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
                     currentView === 'settings'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <Settings className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Settings</span>
+                  <span className="text-xs font-bold">Settings</span>
                 </button>
               </>
             ) : (
               <>
                 <button
                   onClick={() => { setCurrentView('explore'); setSearchQuery(''); setFilteredImages(images); }}
-                  className={`flex items-center gap-3 py-2 px-3 rounded-lg text-left transition-colors duration-150 ${
+                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
                     currentView === 'explore'
-                      ? 'bg-secondary-container text-neutral-900 font-bold border-r-2 border-primary'
+                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
                       : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
                   }`}
                 >
                   <Compass className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Explore</span>
+                  <span className="text-xs font-bold">Explore</span>
                 </button>
                 
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="flex items-center gap-3 py-2 px-3 rounded-lg text-left text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low transition-colors duration-150"
+                  className="relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low transition-all duration-150 w-full"
                 >
                   <User className="h-4.5 w-4.5" />
                   <span className="text-xs font-semibold">Log in / Sign up</span>
@@ -560,7 +597,8 @@ export default function App() {
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm"
+              style={{ backgroundColor: '#30578f', color: '#ffffff' }}
+              className="rounded-full px-4 py-2 text-xs font-bold shadow-sm"
             >
               Connect
             </button>
@@ -568,20 +606,67 @@ export default function App() {
         </div>
       </header>
 
-      {/* Content Canvas Area (Shifted to allow fixed sidebar) */}
-      <main className="flex-1 md:ml-[220px] min-h-screen p-margin-mobile md:p-margin-desktop flex flex-col gap-6 md:gap-8 bg-background pb-20 md:pb-10">
+      {/* Content Canvas Area (Optimized spacing and removed empty gutter gaps!) */}
+      <main className="flex-1 md:ml-[220px] min-h-screen px-6 py-6 md:px-12 md:py-8 flex flex-col gap-6 bg-background pb-20 md:pb-10">
         
-        {/* Sleek top Pinterest Search Bar inside the content area (Spans wide and Centered!) */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full max-w-4xl mx-auto z-10">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-neutral-400" />
-          <input
-            type="text"
-            placeholder="Search aesthetics, minimalist designs, tag pills, or authors..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white rounded-full py-4 pl-12 pr-6 text-xs font-semibold outline-none border border-outline-variant focus:border-neutral-400 focus:ring-2 focus:ring-secondary-container focus:bg-white transition-all text-neutral-800 shadow-sm"
-          />
-        </form>
+        {/* Sleek top Pinterest Header Row (Spans wide and fills all empty top space beautifully!) */}
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-6 z-10 mb-4 pb-4 border-b border-outline-variant/15">
+          {/* Pinterest-style wide search input */}
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-2xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search aesthetics, minimalist designs, tag pills, or authors..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white rounded-full py-3.5 pl-12 pr-6 text-xs font-semibold outline-none border border-outline-variant focus:border-neutral-400 focus:ring-2 focus:ring-secondary-container focus:bg-white transition-all text-neutral-800 shadow-sm"
+            />
+          </form>
+
+          {/* Right side quick actions - elegant and functional to fill blank space */}
+          <div className="hidden md:flex items-center gap-4">
+            {user ? (
+              <>
+                <button
+                  onClick={() => setCurrentView('create')}
+                  style={{ backgroundColor: '#30578f', color: '#ffffff' }}
+                  className="flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-xs font-bold transition-all shadow-sm active:scale-[0.97] hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Create</span>
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('notifications')}
+                  className="relative p-2.5 rounded-full border border-outline-variant bg-white hover:bg-neutral-50 text-neutral-600 transition-colors shadow-sm cursor-pointer"
+                >
+                  <Bell className="h-4.5 w-4.5" />
+                  {notifications.some(n => !n.readAt) && (
+                    <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-primary rounded-full ring-2 ring-white animate-pulse"></span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('profile')}
+                  className="flex items-center gap-2 rounded-full border border-outline-variant bg-white hover:bg-neutral-50 px-3.5 py-1.5 transition-colors shadow-sm cursor-pointer hover:border-neutral-300"
+                >
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10.5px] font-serif uppercase">
+                    {user.username.charAt(1).toUpperCase()}
+                  </div>
+                  <span className="text-xs font-bold text-neutral-800">@{user.username}</span>
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                style={{ backgroundColor: '#30578f', color: '#ffffff' }}
+                className="rounded-full px-5 py-2.5 text-xs font-bold shadow-sm transition-all active:scale-[0.97] hover:opacity-90"
+              >
+                Connect Creator
+              </button>
+            )}
+          </div>
+        </div>
 
         {loading && (
           <div className="flex justify-center items-center py-16">
@@ -595,13 +680,13 @@ export default function App() {
             {(currentView === 'feed' || currentView === 'explore') && (
               <div className="space-y-6">
                 
-                {/* Header (Beautiful Playfair Display Typography - Curation wording removed!) */}
-                <header className="max-w-4xl">
-                  <h1 className="font-serif text-4xl md:text-5xl font-black text-neutral-900 tracking-tight leading-tight mb-2">
-                    Aesthetic Curation Board
+                {/* Header (Dynamic Luxury Curation Headline) */}
+                <header className="max-w-4xl mb-4 md:mb-6">
+                  <h1 className="font-serif text-4.5xl md:text-5xl font-black text-neutral-900 tracking-tight leading-tight mb-2.5">
+                    Curated for You
                   </h1>
-                  <p className="font-sans text-neutral-500 font-medium text-sm leading-relaxed max-w-2xl">
-                    Discover and share contemporary room visual textures, high-end editorial designs, and beautiful minimal architectures compiled by our creator circle.
+                  <p className="font-sans text-neutral-500 font-medium text-[12.5px] md:text-[13.5px] leading-relaxed max-w-2xl">
+                    A selection of contemporary aesthetics, textures, and digital artifacts curated by the Lumora community.
                   </p>
                 </header>
 
@@ -646,117 +731,451 @@ export default function App() {
             )}
 
             {/* VIEW: Notifications */}
-            {currentView === 'notifications' && (
-              <div className="max-w-2xl mx-auto space-y-6 w-full">
-                <div className="flex items-center justify-between border-b border-outline-variant pb-4">
-                  <h1 className="font-serif text-3xl font-black text-neutral-900 tracking-tight">Notifications</h1>
-                  {notifications.some(n => !n.readAt) && (
-                    <button
-                      onClick={handleMarkAllNotifications}
-                      className="rounded-full bg-neutral-100 hover:bg-neutral-200 px-4 py-2 text-xs font-bold text-neutral-600 transition-colors"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
+            {currentView === 'notifications' && (() => {
+              // Helper: Format Time Ago
+              const formatTimeAgo = (dateString) => {
+                const date = new Date(dateString);
+                const now = new Date();
+                const seconds = Math.floor((now - date) / 1000);
+                if (seconds < 60) return 'Just now';
+                const minutes = Math.floor(seconds / 60);
+                if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                const hours = Math.floor(minutes / 60);
+                if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                const days = Math.floor(hours / 24);
+                if (days < 7) {
+                  if (days === 1) return 'Yesterday';
+                  return `${days} day${days > 1 ? 's' : ''} ago`;
+                }
+                return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+              };
 
-                <div className="space-y-3">
-                  {notifications.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-2xl border border-outline-variant p-8 flex flex-col items-center">
-                      <Inbox className="h-10 w-10 text-neutral-300 mb-3" />
-                      <p className="text-xs font-bold text-neutral-400 tracking-wider uppercase">Your inbox is clear</p>
+              // Helper: Group notifications
+              const getGroupedNotifications = () => {
+                const unread = [];
+                const today = [];
+                const thisWeek = [];
+                const earlier = [];
+
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const oneWeekAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+                notifications.forEach(notif => {
+                  const createdTime = new Date(notif.createdAt).getTime();
+                  if (!notif.readAt) {
+                    unread.push(notif);
+                  } else if (createdTime >= startOfToday) {
+                    today.push(notif);
+                  } else if (createdTime >= oneWeekAgo) {
+                    thisWeek.push(notif);
+                  } else {
+                    earlier.push(notif);
+                  }
+                });
+
+                return { unread, today, thisWeek, earlier };
+              };
+
+              // Helper: Parse message format
+              const parseNotificationMessage = (notif) => {
+                const msg = notif.message || '';
+                const actorName = notif.actorFullName || (notif.actorUsername ? `@${notif.actorUsername}` : 'Someone');
+
+                if (msg.startsWith('commented: "')) {
+                  const commentText = msg.replace('commented: "', '').slice(0, -1);
+                  return {
+                    actorName,
+                    actionText: 'commented: ',
+                    highlightText: `“${commentText}”`,
+                    quoteText: null,
+                    isComment: true
+                  };
+                }
+
+                if (msg.startsWith('commented: ')) {
+                  const commentText = msg.replace('commented: ', '');
+                  return {
+                    actorName,
+                    actionText: 'commented: ',
+                    highlightText: commentText.startsWith('"') ? commentText : `“${commentText}”`,
+                    quoteText: null,
+                    isComment: true
+                  };
+                }
+
+                if (msg.startsWith('liked your "')) {
+                  const title = msg.replace('liked your "', '').replace('" post.', '').replace('"', '');
+                  return {
+                    actorName,
+                    actionText: 'liked your post ',
+                    highlightText: `“${title}”`,
+                    quoteText: null,
+                    isLike: true
+                  };
+                }
+
+                // If it's a mention or contains a quotation to blockquote
+                if (msg.toLowerCase().includes('mentioned you')) {
+                  const quoteIndex = msg.indexOf('"');
+                  if (quoteIndex !== -1) {
+                    const commentText = msg.substring(quoteIndex + 1, msg.lastIndexOf('"'));
+                    return {
+                      actorName,
+                      actionText: 'mentioned you in a comment.',
+                      highlightText: null,
+                      quoteText: `“${commentText}”`,
+                      isMention: true
+                    };
+                  }
+                }
+
+                return {
+                  actorName,
+                  actionText: msg,
+                  highlightText: null,
+                  quoteText: null
+                };
+              };
+
+              const handleFollowBack = async (actorId, e) => {
+                e.stopPropagation();
+                try {
+                  const res = await api.toggleFollowUser(actorId);
+                  if (res.following) {
+                    setFollowedUserIds(prev => [...prev, actorId]);
+                  } else {
+                    setFollowedUserIds(prev => prev.filter(id => id !== actorId));
+                  }
+                } catch (err) {
+                  console.error('Failed to toggle follow:', err);
+                }
+              };
+
+              const { unread, today, thisWeek, earlier } = getGroupedNotifications();
+
+              const renderNotificationCard = (notif) => {
+                const parsed = parseNotificationMessage(notif);
+                const isFollowing = followedUserIds.includes(notif.actorId);
+
+                return (
+                  <div key={notif.id} className="flex items-center gap-3 w-full group">
+                    {/* Unread indicator dot */}
+                    <div className="w-2 flex justify-center flex-shrink-0">
+                      {!notif.readAt && (
+                        <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                      )}
                     </div>
-                  ) : (
-                    notifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        onClick={() => {
-                          if (notif.imageId) setSelectedPostId(notif.imageId);
-                          if (!notif.readAt) handleMarkSingleNotification(notif.id);
-                        }}
-                        className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                          notif.readAt
-                            ? 'bg-white border-outline-variant/60 text-neutral-600 hover:bg-neutral-50'
-                            : 'bg-primary/5 border-primary/10 text-neutral-900 shadow-sm font-semibold'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`h-2 w-2 rounded-full bg-primary ${notif.readAt ? 'opacity-0' : ''}`}></div>
-                          <div className="text-xs">
-                            <span className="block font-bold">
-                              {notif.actor_id ? `@${notif.actor_username}` : 'System'}
-                            </span>
-                            <span className="block mt-0.5 text-neutral-500 leading-normal">{notif.message}</span>
+
+                    {/* Notification Card */}
+                    <div
+                      onClick={() => {
+                        if (notif.imageId) setSelectedPostId(notif.imageId);
+                        if (!notif.readAt) handleMarkSingleNotification(notif.id);
+                      }}
+                      className={`flex-1 p-5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                        !notif.readAt
+                          ? 'bg-white border-outline-variant/60 shadow-sm hover:border-neutral-300'
+                          : 'bg-surface-container-low/60 border-transparent hover:bg-surface-container-low'
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Avatar */}
+                        {notif.actorAvatarUrl ? (
+                          <img
+                            src={notif.actorAvatarUrl}
+                            alt={parsed.actorName}
+                            className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm font-serif uppercase flex-shrink-0">
+                            {parsed.actorName.replace(/^@/, '').charAt(0).toUpperCase()}
                           </div>
+                        )}
+
+                        {/* Text Content */}
+                        <div className="text-xs">
+                          <span className="leading-normal">
+                            <span className="font-bold text-neutral-900 mr-1.5">{parsed.actorName}</span>
+                            <span className="text-neutral-600">{parsed.actionText}</span>
+                            {parsed.highlightText && (
+                              <span className={parsed.isComment ? "text-primary font-medium" : "italic text-neutral-800"}>
+                                {parsed.highlightText}
+                              </span>
+                            )}
+                          </span>
+
+                          {/* Blockquote quoteText (Mentions/Comments quote) */}
+                          {parsed.quoteText && (
+                            <blockquote className="mt-2.5 pl-3 border-l-2 border-neutral-300 text-xs italic text-neutral-500 leading-relaxed font-medium">
+                              {parsed.quoteText}
+                            </blockquote>
+                          )}
+
+                          <span className="block mt-1 text-[11px] text-neutral-400 font-medium">{formatTimeAgo(notif.createdAt)}</span>
                         </div>
-                        <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-                          {new Date(notif.createdAt).toLocaleDateString()}
-                        </span>
                       </div>
-                    ))
-                  )}
+
+                      {/* Right actions: follow back button or image thumbnail */}
+                      <div className="flex-shrink-0">
+                        {notif.type === 'follow' && notif.actorId && (
+                          <button
+                            onClick={(e) => handleFollowBack(notif.actorId, e)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                              isFollowing
+                                ? 'border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-500'
+                                : 'bg-primary hover:bg-primary-container text-white shadow-sm'
+                            }`}
+                          >
+                            {isFollowing ? 'Following' : 'Follow Back'}
+                          </button>
+                        )}
+
+                        {notif.imageUrl && (
+                          <div className="h-14 w-14 rounded-lg overflow-hidden border border-neutral-100 shadow-sm flex-shrink-0">
+                            <img src={notif.imageUrl} alt={notif.imageTitle} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <div className="max-w-3xl mx-auto space-y-8 w-full pb-10">
+                  {/* Top Header */}
+                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-outline-variant/30 pb-6">
+                    <div>
+                      <h1 className="font-serif text-4xl font-bold text-neutral-900 tracking-tight leading-tight">Notifications</h1>
+                      <p className="font-sans text-neutral-500 font-medium text-xs mt-1">Stay connected with your creative circle.</p>
+                    </div>
+
+                    {notifications.some(n => !n.readAt) && (
+                      <button
+                        onClick={handleMarkAllNotifications}
+                        className="flex items-center rounded-lg border border-outline-variant bg-white hover:bg-neutral-50 px-4 py-2 text-xs font-bold text-neutral-800 transition-colors shadow-sm cursor-pointer"
+                      >
+                        <svg className="w-3.5 h-3.5 mr-1.5 text-neutral-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5M8.25 18l6-6 4.5 4.5" />
+                        </svg>
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notification List Container */}
+                  <div className="space-y-8">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-20 bg-white rounded-2xl border border-outline-variant p-8 flex flex-col items-center shadow-sm">
+                        <Inbox className="h-12 w-12 text-neutral-300 mb-3" />
+                        <p className="text-xs font-bold text-neutral-400 tracking-wider uppercase">Your inbox is clear</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* 1. NEW SECTION */}
+                        {unread.length > 0 && (
+                          <div className="space-y-4">
+                            <h2 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest pl-5">New</h2>
+                            <div className="space-y-3">
+                              {unread.map(renderNotificationCard)}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 2. EARLIER TODAY SECTION */}
+                        {today.length > 0 && (
+                          <div className="space-y-4">
+                            <h2 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest pl-5">Earlier Today</h2>
+                            <div className="space-y-3">
+                              {today.map(renderNotificationCard)}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. THIS WEEK SECTION */}
+                        {thisWeek.length > 0 && (
+                          <div className="space-y-4">
+                            <h2 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest pl-5">This Week</h2>
+                            <div className="space-y-3">
+                              {thisWeek.map(renderNotificationCard)}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 4. EARLIER SECTION */}
+                        {earlier.length > 0 && (
+                          <div className="space-y-4">
+                            <h2 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest pl-5">Earlier</h2>
+                            <div className="space-y-3">
+                              {earlier.map(renderNotificationCard)}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* VIEW: Profile */}
-            {currentView === 'profile' && profileUser && (
-              <div className="space-y-8 w-full">
-                {/* Profile Banner */}
-                <div className="bg-white rounded-2xl border border-outline-variant p-8 flex flex-col items-center text-center shadow-sm">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-3xl font-serif uppercase shadow-inner mb-4">
-                    {profileUser.username.charAt(1).toUpperCase()}
-                  </div>
-                  <h1 className="font-serif text-3xl font-bold text-neutral-900">{profileUser.fullName}</h1>
-                  <p className="text-xs font-bold text-neutral-400 tracking-wider uppercase mt-1">@{profileUser.username}</p>
+            {currentView === 'profile' && profileUser && (() => {
+              // Helper to format stat number (e.g. 2400 -> 2.4k)
+              const formatStatNumber = (num) => {
+                if (num === undefined || num === null) return '0';
+                if (num >= 1000) {
+                  return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+                }
+                return num.toLocaleString();
+              };
+
+              // Mockup biography fallback
+              const bioText = profileUser.bio || "Visual Storyteller & Editorial Designer. Exploring the intersection of minimalist architecture and natural light. Curating moments of quiet beauty for the modern creative.";
+              
+              // Mockup website fallback
+              const websiteUrl = profileUser.website || "vance-studios.com/curation";
+              const displayWebsite = websiteUrl.replace(/^(https?:\/\/)?(www\.)?/, "");
+
+              return (
+                <div className="space-y-8 w-full pb-10">
                   
-                  {profileUser.bio && (
-                    <p className="mt-3 text-sm text-neutral-600 max-w-md font-medium">{profileUser.bio}</p>
+                  {/* Luxury Profile Header matching Mockup exactly */}
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-16 w-full max-w-4xl mx-auto py-6 px-4">
+                    
+                    {/* Left Column: Circular framed avatar */}
+                    <div className="flex-shrink-0">
+                      <div className="border-[3.5px] border-[#d5c3b1] p-1.5 rounded-full shadow-sm hover:scale-[1.01] transition-transform duration-300">
+                        {profileUser.avatarUrl ? (
+                          <img
+                            src={profileUser.avatarUrl}
+                            alt={profileUser.fullName}
+                            className="h-36 w-36 md:h-40 md:w-40 rounded-full object-cover shadow-inner"
+                          />
+                        ) : (
+                          <div className="h-36 w-36 md:h-40 md:w-40 rounded-full bg-gradient-to-tr from-[#30578f]/10 to-[#30578f]/5 flex items-center justify-center font-serif text-[#30578f] font-bold text-5xl uppercase shadow-inner">
+                            {profileUser.fullName ? profileUser.fullName.charAt(0).toUpperCase() : (profileUser.username ? profileUser.username.charAt(1).toUpperCase() : 'U')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column: User details, Stats, Bio & Website */}
+                    <div className="flex-1 text-center md:text-left flex flex-col items-center md:items-start">
+                      
+                      {/* Name & Edit Profile button styled in Stitch Blue */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4">
+                        <div>
+                          <h1 className="font-serif text-3.5xl font-black text-neutral-900 leading-tight">
+                            {profileUser.fullName}
+                          </h1>
+                          <span className="text-[13px] font-bold text-primary tracking-wide block mt-0.5">
+                            @{profileUser.username}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => setCurrentView('settings')}
+                          style={{ backgroundColor: '#30578f', color: '#ffffff' }}
+                          className="rounded-xl px-6 py-2.5 text-[11px] font-bold tracking-wider uppercase transition-all duration-150 active:scale-[0.98] shadow-sm flex items-center gap-1.5 self-center sm:self-auto hover:opacity-90"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                          </svg>
+                          Edit Profile
+                        </button>
+                      </div>
+
+                      {/* Horizontal stats line */}
+                      <div className="flex gap-8 my-5 text-[13.5px] text-neutral-500 font-sans tracking-wide">
+                        <span>
+                          <strong className="text-neutral-900 font-extrabold text-[15px] mr-1">{formatStatNumber(profileUser.postsCount)}</strong> Posts
+                        </span>
+                        <span>
+                          <strong className="text-neutral-900 font-extrabold text-[15px] mr-1">{formatStatNumber(profileUser.followersCount)}</strong> Followers
+                        </span>
+                        <span>
+                          <strong className="text-neutral-900 font-extrabold text-[15px] mr-1">{formatStatNumber(profileUser.followingCount)}</strong> Following
+                        </span>
+                      </div>
+
+                      {/* Biography paragraph with fallback */}
+                      <p className="text-neutral-600 text-[13.5px] leading-relaxed max-w-xl font-sans text-center md:text-left">
+                        {bioText}
+                      </p>
+
+                      {/* Website link with link icon */}
+                      <div className="flex items-center gap-1.5 mt-4 text-[13px] font-bold text-primary hover:underline cursor-pointer">
+                        <svg className="h-3.5 w-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                        </svg>
+                        <a href={websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          {displayWebsite}
+                        </a>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* Horizontal Divider Line */}
+                  <div className="w-full border-t border-outline-variant/30 my-8 max-w-4xl mx-auto"></div>
+
+                  {/* Center Aligned Tabs Selection with icons (Posts and Saved only!) */}
+                  <div className="flex justify-center border-t border-outline-variant/30 max-w-4xl mx-auto -mt-8 mb-8">
+                    <div className="flex gap-12">
+                      <button
+                        onClick={() => setProfileTab('created')}
+                        className={`pt-4 px-6 flex items-center text-xs font-bold uppercase tracking-widest border-t-2 transition-all duration-200 cursor-pointer ${
+                          profileTab === 'created'
+                            ? 'border-primary text-primary font-black scale-105'
+                            : 'border-transparent text-neutral-400 hover:text-neutral-700'
+                        }`}
+                      >
+                        <LayoutGrid className="w-4 h-4 mr-2" strokeWidth={2.5} />
+                        Posts
+                      </button>
+                      
+                      <button
+                        onClick={() => setProfileTab('saved')}
+                        className={`pt-4 px-6 flex items-center text-xs font-bold uppercase tracking-widest border-t-2 transition-all duration-200 cursor-pointer ${
+                          profileTab === 'saved'
+                            ? 'border-primary text-primary font-black scale-105'
+                            : 'border-transparent text-neutral-400 hover:text-neutral-700'
+                        }`}
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.157 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                        </svg>
+                        Saved
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Profile Grid */}
+                  <MasonryGrid
+                    images={profileImages}
+                    user={user}
+                    onPostClick={(id) => setSelectedPostId(id)}
+                    onTagClick={handleTagClick}
+                    onLikeToggle={handleLikeToggle}
+                    onSaveToggle={handleSaveToggle}
+                    onShareToggle={(id) => setSelectedPostId(id)}
+                    onAuthPrompt={() => setShowAuthModal(true)}
+                  />
+
+                  {/* View More Curation centered down chevron button */}
+                  {profileImages.length > 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 gap-2 text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer w-full mt-6 border-t border-outline-variant/10">
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">View more curation</span>
+                      <svg className="w-4 h-4 animate-bounce mt-1 text-neutral-500" fill="none" stroke="currentColor" strokeWidth="3.2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </div>
                   )}
 
-                  <div className="flex gap-6 mt-4 text-xs font-bold text-neutral-400 tracking-wider uppercase">
-                    <span>{profileUser.followersCount || 0} Followers</span>
-                    <span>{profileUser.followingCount || 0} Following</span>
-                  </div>
                 </div>
-
-                {/* Profile Tabs (Tagged option removed!) */}
-                <div className="flex justify-center border-b border-outline-variant pb-2 gap-4">
-                  <button
-                    onClick={() => setProfileTab('created')}
-                    className={`pb-2 px-4 text-sm font-bold border-b-2 transition-all ${
-                      profileTab === 'created'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-neutral-500 hover:text-neutral-800'
-                    }`}
-                  >
-                    Created
-                  </button>
-                  <button
-                    onClick={() => setProfileTab('saved')}
-                    className={`pb-2 px-4 text-sm font-bold border-b-2 transition-all ${
-                      profileTab === 'saved'
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-neutral-500 hover:text-neutral-800'
-                    }`}
-                  >
-                    Saved
-                  </button>
-                </div>
-
-                {/* Profile Grid */}
-                <MasonryGrid
-                  images={profileImages}
-                  user={user}
-                  onPostClick={(id) => setSelectedPostId(id)}
-                  onTagClick={handleTagClick}
-                  onLikeToggle={handleLikeToggle}
-                  onSaveToggle={handleSaveToggle}
-                  onShareToggle={(id) => setSelectedPostId(id)}
-                  onAuthPrompt={() => setShowAuthModal(true)}
-                />
-              </div>
-            )}
+              );
+            })()}
 
             {/* VIEW: Create Post */}
             {currentView === 'create' && (
@@ -809,7 +1228,7 @@ export default function App() {
                   </div>
 
                   {/* Form information */}
-                  <form onSubmit={handleUploadSubmit} className="space-y-4 flex flex-col justify-between">
+                  <form onSubmit={handleUploadSubmit} className="space-y-5 flex flex-col">
                     <div className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Inspiration Title</label>
@@ -825,7 +1244,7 @@ export default function App() {
 
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest">Story / Caption</label>
+                          <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest">Caption</label>
                           <button
                             type="button"
                             onClick={handleAICaption}
@@ -847,7 +1266,7 @@ export default function App() {
 
                       {/* Tag Chip input pills */}
                       <div>
-                        <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Tag pills</label>
+                        <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Tags</label>
                         
                         {uploadTags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mb-2.5">
@@ -869,24 +1288,41 @@ export default function App() {
                           </div>
                         )}
 
-                        <input
-                          type="text"
-                          placeholder="Type tag and press Enter or comma..."
-                          value={uploadTagInput}
-                          onChange={(e) => setUploadTagInput(e.target.value)}
-                          onKeyDown={handleTagInputKeyDown}
-                          className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Type tag and press Enter or click Add..."
+                            value={uploadTagInput}
+                            onChange={(e) => setUploadTagInput(e.target.value)}
+                            onKeyDown={handleTagInputKeyDown}
+                            className="flex-1 rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const val = uploadTagInput.trim().replace(/^#/, '');
+                              if (val && !uploadTags.includes(val)) {
+                                setUploadTags([...uploadTags, val]);
+                              }
+                              setUploadTagInput('');
+                            }}
+                            style={{ backgroundColor: '#30578f' }}
+                            className="hover:bg-[#223f68] text-white px-5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-4 border-t border-outline-variant/30">
+                    <div className="pt-4 border-t border-outline-variant/30 mt-2">
                       <button
                         type="submit"
                         disabled={uploadLoading}
-                        className="w-full rounded-xl bg-primary py-3.5 text-xs font-bold text-white shadow-md hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        style={{ backgroundColor: '#30578f' }}
+                        className="w-full rounded-xl hover:bg-[#223f68] py-4 text-xs font-bold text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                       >
-                        Publish Composition
+                        {uploadLoading ? 'Publishing...' : 'Publish'}
                       </button>
                     </div>
                   </form>
@@ -938,6 +1374,49 @@ export default function App() {
                 )}
 
                 <form onSubmit={handleSettingsUpdate} className="bg-white rounded-2xl border border-outline-variant p-6 md:p-8 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xl font-serif uppercase flex-shrink-0 overflow-hidden border border-outline-variant group">
+                      {settingsAvatarPreview ? (
+                        <img src={settingsAvatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        user?.username?.charAt(1).toUpperCase() || 'U'
+                      )}
+                      
+                      <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <Upload className="h-5 w-5 text-white" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              setSettingsAvatarPreview(URL.createObjectURL(file));
+                              const formData = new FormData();
+                              formData.append('image', file);
+                              setAvatarUploading(true);
+                              try {
+                                await api.uploadAvatar(formData);
+                                setSettingsMessage("Avatar updated successfully!");
+                                loadProfileData();
+                              } catch (err) {
+                                setSettingsMessage(err.message || "Failed to upload avatar");
+                              } finally {
+                                setAvatarUploading(false);
+                              }
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-neutral-800">Profile Picture</h3>
+                      <p className="text-xs text-neutral-500 font-medium mt-0.5">
+                        {avatarUploading ? "Uploading..." : "Click the avatar to upload a new image. JPEG, PNG."}
+                      </p>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Full Name</label>
                     <input
@@ -984,7 +1463,8 @@ export default function App() {
 
                   <button
                     type="submit"
-                    className="w-full rounded-xl bg-primary py-3.5 text-xs font-bold text-white shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                    style={{ backgroundColor: '#30578f', color: '#ffffff' }}
+                    className="w-full rounded-xl py-3.5 text-xs font-bold shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Save Changes
                   </button>
@@ -1105,12 +1585,32 @@ export default function App() {
         onAuthPrompt={() => setShowAuthModal(true)}
         onTagClick={handleTagClick}
         onLikeToggle={(id, isLiked) => {
-          setImages(prev => prev.map(img => img.id === id ? { ...img, isLiked } : img));
-          setFilteredImages(prev => prev.map(img => img.id === id ? { ...img, isLiked } : img));
+          setImages(prev => prev.map(img => img.id === id ? {
+            ...img,
+            likeCount: isLiked ? img.likeCount + 1 : Math.max(0, img.likeCount - 1),
+            isLiked
+          } : img));
+          setFilteredImages(prev => prev.map(img => img.id === id ? {
+            ...img,
+            likeCount: isLiked ? img.likeCount + 1 : Math.max(0, img.likeCount - 1),
+            isLiked
+          } : img));
         }}
         onSaveToggle={(id, isSaved) => {
-          setImages(prev => prev.map(img => img.id === id ? { ...img, isSaved } : img));
-          setFilteredImages(prev => prev.map(img => img.id === id ? { ...img, isSaved } : img));
+          setImages(prev => prev.map(img => img.id === id ? {
+            ...img,
+            saveCount: isSaved ? img.saveCount + 1 : Math.max(0, img.saveCount - 1),
+            isSaved
+          } : img));
+          setFilteredImages(prev => prev.map(img => img.id === id ? {
+            ...img,
+            saveCount: isSaved ? img.saveCount + 1 : Math.max(0, img.saveCount - 1),
+            isSaved
+          } : img));
+        }}
+        onDeleteToggle={(id) => {
+          setImages(prev => prev.filter(img => img.id !== id));
+          setFilteredImages(prev => prev.filter(img => img.id !== id));
         }}
       />
 

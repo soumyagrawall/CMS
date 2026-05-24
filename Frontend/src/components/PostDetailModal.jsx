@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Heart, Bookmark, Share2, Send, MessageCircle, Link, Check } from 'lucide-react';
+import { X, Heart, Bookmark, Share2, Send, MessageCircle, Link, Check, Trash2 } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuthPrompt, onTagClick, onLikeToggle, onSaveToggle }) {
+export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuthPrompt, onTagClick, onLikeToggle, onSaveToggle, onDeleteToggle }) {
   if (!isOpen || !imageId) return null;
 
   const [image, setImage] = useState(null);
@@ -67,10 +67,10 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
       const res = await api.likeImage(imageId);
       setImage(prev => ({
         ...prev,
-        likeCount: res.isLiked ? prev.likeCount + 1 : Math.max(0, prev.likeCount - 1),
-        isLiked: res.isLiked
+        likeCount: res.liked ? prev.likeCount + 1 : Math.max(0, prev.likeCount - 1),
+        isLiked: res.liked
       }));
-      if (onLikeToggle) onLikeToggle(imageId, res.isLiked);
+      if (onLikeToggle) onLikeToggle(imageId, res.liked);
     } catch (err) {
       console.error(err);
     }
@@ -87,10 +87,10 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
       const res = await api.saveImage(imageId);
       setImage(prev => ({
         ...prev,
-        saveCount: res.isSaved ? prev.saveCount + 1 : Math.max(0, prev.saveCount - 1),
-        isSaved: res.isSaved
+        saveCount: res.saved ? prev.saveCount + 1 : Math.max(0, prev.saveCount - 1),
+        isSaved: res.saved
       }));
-      if (onSaveToggle) onSaveToggle(imageId, res.isSaved);
+      if (onSaveToggle) onSaveToggle(imageId, res.saved);
     } catch (err) {
       console.error(err);
     }
@@ -103,8 +103,8 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
     }
     try {
       const res = await api.toggleFollowUser(image.userId);
-      setIsFollowing(res.isFollowing);
-      if (res.isFollowing) {
+      setIsFollowing(res.following);
+      if (res.following) {
         setFollowText('Following');
       } else {
         // Fetch profile to see if follow back is still relevant
@@ -113,6 +113,20 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this visual inspiration? This action cannot be undone.")) return;
+    try {
+      await api.deleteImage(imageId);
+      onClose();
+      if (onDeleteToggle) {
+        onDeleteToggle(imageId);
+      }
+    } catch (err) {
+      console.error("Failed to delete image:", err);
+      alert("Failed to delete post. Please try again.");
     }
   };
 
@@ -265,6 +279,16 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
                   </div>
                 )}
               </div>
+              
+              {user && Number(user.id) === Number(image.userId) && (
+                <button
+                  onClick={handleDelete}
+                  className="p-3 rounded-full border border-red-100 hover:bg-red-50 text-red-500 transition-all cursor-pointer"
+                  title="Delete Post"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
             </div>
 
             {/* Like and Save Count Displays */}
@@ -314,14 +338,16 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
               </div>
             </div>
 
-            {(!user || user.id !== image.userId) && (
+            {(!user || Number(user.id) !== Number(image.userId)) && (
               <button
                 onClick={handleFollow}
-                className={`rounded-full px-5 py-2 text-xs font-bold shadow-sm transition-all ${
-                  isFollowing
-                    ? 'border border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
-                    : 'bg-primary text-white hover:opacity-95 active:scale-[0.98]'
-                }`}
+                style={{
+                  backgroundColor: isFollowing ? '#f3f4f6' : '#30578f',
+                  color: isFollowing ? '#4b5563' : '#ffffff',
+                  border: isFollowing ? '1px solid #d1d5db' : 'none',
+                  cursor: 'pointer'
+                }}
+                className="rounded-full px-5 py-2 text-xs font-bold shadow-sm transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
               >
                 {followText}
               </button>

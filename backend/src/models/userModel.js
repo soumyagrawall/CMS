@@ -15,8 +15,21 @@ const findByUsername = async (username) => {
   return rows[0] || null;
 };
 
-const findById = async (id) => {
-  const [rows] = await pool.execute(`SELECT ${publicFields} FROM users WHERE id = :id LIMIT 1`, { id });
+const findById = async (id, viewerId = 0) => {
+  const vId = viewerId || 0;
+  const [rows] = await pool.execute(
+    `SELECT u.id, u.full_name AS fullName, u.username, u.email, u.avatar_url AS avatarUrl,
+            u.bio, u.website, u.location, u.is_private AS isPrivate, u.created_at AS createdAt,
+            (SELECT COUNT(*) FROM images i WHERE i.user_id = u.id AND i.deleted_at IS NULL) AS postsCount,
+            (SELECT COUNT(*) FROM follows f WHERE f.following_id = u.id) AS followersCount,
+            (SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS followingCount,
+            EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = :vId AND f.following_id = u.id) AS isFollowing,
+            EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = u.id AND f.following_id = :vId) AS isFollowedBy
+     FROM users u
+     WHERE u.id = :id
+     LIMIT 1`,
+    { id, vId }
+  );
   return rows[0] || null;
 };
 

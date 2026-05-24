@@ -104,8 +104,8 @@ export const api = {
   },
 
   // Images & Feed
-  getFeed: async () => {
-    return request("/images/feed");
+  getFeed: async (type = 'explore') => {
+    return request(`/images/feed?type=${type}`);
   },
 
   getImageDetail: async (id) => {
@@ -193,7 +193,18 @@ export const api = {
     });
   },
 
+  uploadAvatar: async (formData) => {
+    return request("/users/me/avatar", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
   getUserProfile: async (id) => {
     return request(`/users/${id}`);
+  },
+
+  deleteImage: async (id) => {
+    return request(`/images/${id}`, { method: "DELETE" });
   }
 };

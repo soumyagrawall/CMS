@@ -12,9 +12,13 @@ const listForUser = async (userId, limit, offset) => {
   const [rows] = await pool.query(
     `SELECT n.id, n.type, n.message, n.image_id AS imageId, n.comment_id AS commentId,
             n.read_at AS readAt, n.created_at AS createdAt,
-            a.id AS actorId, a.username AS actorUsername, a.avatar_url AS actorAvatarUrl
+            a.id AS actorId, a.username AS actorUsername, a.avatar_url AS actorAvatarUrl,
+            a.full_name AS actorFullName,
+            i.image_url AS imageUrl, i.title AS imageTitle,
+            CAST(EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = n.user_id AND f.following_id = a.id) AS UNSIGNED) AS isFollowing
      FROM notifications n
      LEFT JOIN users a ON a.id = n.actor_id
+     LEFT JOIN images i ON i.id = n.image_id
      WHERE n.user_id = :userId
      ORDER BY n.created_at DESC
      LIMIT :limit OFFSET :offset`,
