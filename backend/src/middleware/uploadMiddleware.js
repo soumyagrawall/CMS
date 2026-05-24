@@ -5,16 +5,59 @@ const { v4: uuid } = require("uuid");
 const env = require("../config/env");
 const AppError = require("../utils/AppError");
 
-const uploadPath = path.resolve(process.cwd(), env.uploadDir);
-fs.mkdirSync(uploadPath, { recursive: true });
+let storage;
+let isS3 = false;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadPath),
-  filename: (req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    cb(null, `${uuid()}${extension}`);
+// Check if AWS configurations are set
+if (
+  env.aws &&
+  env.aws.accessKeyId &&
+  env.aws.secretAccessKey &&
+  env.aws.bucketName &&
+  env.aws.region
+) {
+  try {
+    const { S3Client } = require("@aws-sdk/client-s3");
+    const multerS3 = require("multer-s3");
+
+    const s3 = new S3Client({
+      credentials: {
+        accessKeyId: env.aws.accessKeyId,
+        secretAccessKey: env.aws.secretAccessKey,
+      },
+      region: env.aws.region,
+    });
+
+    storage = multerS3({
+      s3: s3,
+      bucket: env.aws.bucketName,
+      acl: "public-read",
+      contentType: multerS3.AUTO_CONTENT_TYPE,
+      key: (req, file, cb) => {
+        const extension = path.extname(file.originalname).toLowerCase();
+        cb(null, `uploads/${uuid()}${extension}`);
+      },
+    });
+    isS3 = true;
+    console.log("AWS S3 storage configured successfully for upload middleware.");
+  } catch (err) {
+    console.error("Failed to configure AWS S3 storage, falling back to local storage:", err.message);
   }
-});
+}
+
+if (!isS3) {
+  const uploadPath = path.resolve(process.cwd(), env.uploadDir);
+  fs.mkdirSync(uploadPath, { recursive: true });
+
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadPath),
+    filename: (req, file, cb) => {
+      const extension = path.extname(file.originalname).toLowerCase();
+      cb(null, `${uuid()}${extension}`);
+    }
+  });
+  console.log("Local disk storage configured for upload middleware.");
+}
 
 const fileFilter = (req, file, cb) => {
   if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.mimetype)) {
@@ -32,5 +75,6 @@ const uploadImage = multer({
 }).single("image");
 
 module.exports = {
-  uploadImage
+  uploadImage,
+  isS3Mode: () => isS3
 };

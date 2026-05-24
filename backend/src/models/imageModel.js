@@ -23,14 +23,25 @@ const create = async ({ userId, title, caption, imageUrl, sourceType, aiPrompt =
     const imageId = result.insertId;
 
     for (const tag of normalizeTags(tags)) {
-      const [tagResult] = await connection.execute(
-        "INSERT INTO tags (name) VALUES (:tag) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)",
-        { tag }
-      );
-      await connection.execute(
-        "INSERT IGNORE INTO image_tags (image_id, tag_id) VALUES (:imageId, :tagId)",
-        { imageId, tagId: tagResult.insertId }
-      );
+      const [existingTags] = await connection.execute("SELECT id FROM tags WHERE name = :tag", { tag });
+      let tagId;
+      if (existingTags.length > 0) {
+        tagId = existingTags[0].id;
+      } else {
+        const [insertResult] = await connection.execute("INSERT IGNORE INTO tags (name) VALUES (:tag)", { tag });
+        tagId = insertResult.insertId;
+        if (tagId === 0) {
+          const [retryTags] = await connection.execute("SELECT id FROM tags WHERE name = :tag", { tag });
+          tagId = retryTags[0]?.id;
+        }
+      }
+
+      if (tagId) {
+        await connection.execute(
+          "INSERT IGNORE INTO image_tags (image_id, tag_id) VALUES (:imageId, :tagId)",
+          { imageId, tagId }
+        );
+      }
     }
 
     await connection.commit();
@@ -65,20 +76,42 @@ const findById = async (id) => {
   return { ...rows[0], tags: tags.map((tag) => tag.name) };
 };
 
+const attachTagsToImages = async (images) => {
+  if (!images || images.length === 0) return [];
+  const imageIds = images.map(img => img.id);
+  const [tagRows] = await pool.query(
+    `SELECT it.image_id AS imageId, t.name
+     FROM tags t
+     JOIN image_tags it ON it.tag_id = t.id
+     WHERE it.image_id IN (${imageIds.join(",")})`
+  );
+
+  const tagMap = {};
+  tagRows.forEach(row => {
+    if (!tagMap[row.imageId]) tagMap[row.imageId] = [];
+    tagMap[row.imageId].push(row.name);
+  });
+
+  return images.map(img => ({
+    ...img,
+    tags: tagMap[img.id] || []
+  }));
+};
+
 const listFeed = async (viewerId, limit, offset) => {
   const vId = viewerId || 0;
   const [rows] = await pool.query(
     `SELECT ${imageSelect},
-            EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = ?) AS likedByMe,
-            EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = ?) AS savedByMe
+            EXISTS(SELECT 1 FROM likes l WHERE l.image_id = i.id AND l.user_id = :vId) AS likedByMe,
+            EXISTS(SELECT 1 FROM saves s WHERE s.image_id = i.id AND s.user_id = :vId) AS savedByMe
      FROM images i
      JOIN users u ON u.id = i.user_id
      WHERE i.deleted_at IS NULL
      ORDER BY i.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [vId, vId, limit, offset]
+     LIMIT :limit OFFSET :offset`,
+    { vId, limit, offset }
   );
-  return rows;
+  return attachTagsToImages(rows);
 };
 
 const search = async (term, limit, offset) => {
@@ -90,12 +123,12 @@ const search = async (term, limit, offset) => {
      LEFT JOIN image_tags it ON it.image_id = i.id
      LEFT JOIN tags t ON t.id = it.tag_id
      WHERE i.deleted_at IS NULL
-       AND (i.title LIKE ? OR i.caption LIKE ? OR t.name LIKE ?)
+       AND (i.title LIKE :like OR i.caption LIKE :like OR t.name LIKE :like)
      ORDER BY i.created_at DESC
-     LIMIT ? OFFSET ?`,
-    [like, like, like, limit, offset]
+     LIMIT :limit OFFSET :offset`,
+    { like, limit, offset }
   );
-  return rows;
+  return attachTagsToImages(rows);
 };
 
 const incrementCounter = async (id, column, amount = 1) => {

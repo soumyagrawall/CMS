@@ -9,7 +9,7 @@ const create = async ({ userId, actorId = null, type, imageId = null, commentId 
 };
 
 const listForUser = async (userId, limit, offset) => {
-  const [rows] = await pool.execute(
+  const [rows] = await pool.query(
     `SELECT n.id, n.type, n.message, n.image_id AS imageId, n.comment_id AS commentId,
             n.read_at AS readAt, n.created_at AS createdAt,
             a.id AS actorId, a.username AS actorUsername, a.avatar_url AS actorAvatarUrl

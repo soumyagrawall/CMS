@@ -7,6 +7,9 @@ const { isDatabaseUnavailable } = require("../utils/databaseError");
 const demoStore = require("../utils/demoStore");
 
 const fileToPublicUrl = (file) => {
+  if (file.location) return file.location;
+  if (file.path && (file.path.startsWith("http://") || file.path.startsWith("https://"))) return file.path;
+
   const relative = path.relative(process.cwd(), file.path).replace(/\\/g, "/");
   return `${env.apiBaseUrl}/${relative}`;
 };

@@ -1,0 +1,5 @@
+/* App level utility styles */
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}

@@ -16,7 +16,8 @@ const getImage = asyncHandler(async (req, res) => {
 
 const feed = asyncHandler(async (req, res) => {
   const { page, limit, offset } = getPagination(req.validated.query);
-  const images = await imageService.listFeed(req.user.id, limit, offset);
+  const userId = req.user ? req.user.id : null;
+  const images = await imageService.listFeed(userId, limit, offset);
   success(res, { images }, "Feed loaded", 200, { page, limit });
 });
 
