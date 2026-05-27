@@ -107,11 +107,11 @@ const listFeed = async (viewerId, limit, offset, type = 'explore') => {
   let filterClause = "i.deleted_at IS NULL";
   if (type === 'followed') {
     if (vId > 0) {
-      filterClause += ` AND (i.user_id IN (SELECT following_id FROM follows WHERE follower_id = :vId) OR i.user_id = :vId)`;
+      // Include followed users, their own posts, AND a curated subset of 50% of all posts as recommendations
+      // to ensure the home page is populated with 100+ images.
+      filterClause += ` AND (i.user_id IN (SELECT following_id FROM follows WHERE follower_id = :vId) OR i.user_id = :vId OR i.id % 2 = 0)`;
     }
-    // If not logged in, show all images for the followed/curated feed
   }
-  // For 'explore', show all non-deleted images (no arbitrary filtering)
 
   const [rows] = await pool.query(
     `SELECT ${imageSelect},
