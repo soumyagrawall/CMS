@@ -164,12 +164,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             </button>
           </form>
 
-          {/* Test Credentials Helper */}
-          {isLogin && (
-            <p className="text-[11px] text-neutral-400 text-center font-medium mt-3.5 leading-normal">
-              Seed accounts password is <span className="font-bold text-neutral-500">demo12345</span>
-            </p>
-          )}
+
 
           <div className="mt-5 border-t border-neutral-100 pt-5 text-center">
             <button

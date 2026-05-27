@@ -103,6 +103,11 @@ const listFeed = async (viewerId, limit, offset, type = 'explore') => {
   } catch (error) {
     if (isDatabaseUnavailable(error)) {
       const allImages = demoStore.getImages();
+      if (type === 'followed') {
+        // Return a distinct curated subset for the feed so it differs from explore
+        const curated = allImages.filter((_, i) => i % 2 !== 0);
+        return curated.slice(offset, offset + limit);
+      }
       return allImages.slice(offset, offset + limit);
     }
     throw error;

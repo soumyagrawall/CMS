@@ -413,11 +413,9 @@ export default function App() {
     setCurrentView('explore');
   };
 
-  // Auth Success helper callback
   const handleAuthSuccess = (authenticatedUser) => {
     setUser(authenticatedUser);
     setCurrentView('feed');
-    loadFeed();
   };
 
   // Filtering user's profile images: Created vs Saved
@@ -612,16 +610,20 @@ export default function App() {
         {/* Sleek top Pinterest Header Row (Spans wide and fills all empty top space beautifully!) */}
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-6 z-10 mb-4 pb-4 border-b border-outline-variant/15">
           {/* Pinterest-style wide search input */}
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-2xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-neutral-400" />
-            <input
-              type="text"
-              placeholder="Search aesthetics, minimalist designs, tag pills, or authors..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white rounded-full py-3.5 pl-12 pr-6 text-xs font-semibold outline-none border border-outline-variant focus:border-neutral-400 focus:ring-2 focus:ring-secondary-container focus:bg-white transition-all text-neutral-800 shadow-sm"
-            />
-          </form>
+          {user ? (
+            <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-2xl">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search aesthetics, minimalist designs, tag pills, or authors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white rounded-full py-3.5 pl-12 pr-6 text-xs font-semibold outline-none border border-outline-variant focus:border-neutral-400 focus:ring-2 focus:ring-secondary-container focus:bg-white transition-all text-neutral-800 shadow-sm"
+              />
+            </form>
+          ) : (
+            <div className="flex-1"></div>
+          )}
 
           {/* Right side quick actions - elegant and functional to fill blank space */}
           <div className="hidden md:flex items-center gap-4">
