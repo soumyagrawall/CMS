@@ -103,13 +103,7 @@ const listFeed = async (viewerId, limit, offset, type = 'explore') => {
   } catch (error) {
     if (isDatabaseUnavailable(error)) {
       const allImages = demoStore.getImages();
-      let filtered;
-      if (type === 'followed') {
-        filtered = allImages.filter(img => img.id % 2 === 1);
-      } else {
-        filtered = allImages.filter(img => img.id % 2 === 0);
-      }
-      return filtered.slice(offset, offset + limit);
+      return allImages.slice(offset, offset + limit);
     }
     throw error;
   }
