@@ -590,7 +590,7 @@ export default function App() {
               </button>
               <button onClick={() => setCurrentView('profile')} className="p-1 border border-primary rounded-full">
                 <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10px] font-serif uppercase">
-                  {user.username.charAt(1).toUpperCase()}
+                  {user.username.charAt(0).toUpperCase()}
                 </div>
               </button>
             </>
@@ -651,7 +651,7 @@ export default function App() {
                   className="flex items-center gap-2 rounded-full border border-outline-variant bg-white hover:bg-neutral-50 px-3.5 py-1.5 transition-colors shadow-sm cursor-pointer hover:border-neutral-300"
                 >
                   <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10.5px] font-serif uppercase">
-                    {user.username.charAt(1).toUpperCase()}
+                    {user.username.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-xs font-bold text-neutral-800">@{user.username}</span>
                 </button>
@@ -720,6 +720,7 @@ export default function App() {
                 <MasonryGrid
                   images={filteredImages}
                   user={user}
+                  showLikeCounter={currentView === 'feed'}
                   onPostClick={(id) => setSelectedPostId(id)}
                   onTagClick={handleTagClick}
                   onLikeToggle={handleLikeToggle}
@@ -1054,7 +1055,7 @@ export default function App() {
                           />
                         ) : (
                           <div className="h-36 w-36 md:h-40 md:w-40 rounded-full bg-gradient-to-tr from-[#30578f]/10 to-[#30578f]/5 flex items-center justify-center font-serif text-[#30578f] font-bold text-5xl uppercase shadow-inner">
-                            {profileUser.fullName ? profileUser.fullName.charAt(0).toUpperCase() : (profileUser.username ? profileUser.username.charAt(1).toUpperCase() : 'U')}
+                            {profileUser.fullName ? profileUser.fullName.charAt(0).toUpperCase() : (profileUser.username ? profileUser.username.charAt(0).toUpperCase() : 'U')}
                           </div>
                         )}
                       </div>

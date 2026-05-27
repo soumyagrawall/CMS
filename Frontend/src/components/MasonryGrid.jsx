@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, MessageSquare, Bookmark } from 'lucide-react';
 
-export default function MasonryGrid({ images, user, onPostClick, onTagClick, onLikeToggle, onSaveToggle, onShareToggle, onAuthPrompt }) {
+export default function MasonryGrid({ images, user, onPostClick, onTagClick, onLikeToggle, onSaveToggle, onShareToggle, onAuthPrompt, showLikeCounter }) {
   if (!images || images.length === 0) {
     return (
       <div className="w-full text-center py-20">
@@ -82,14 +82,19 @@ export default function MasonryGrid({ images, user, onPostClick, onTagClick, onL
                 
                 {/* Left side actions: Heart (Like), Bookmark (Save) & Message (Comment) bubble */}
                 <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={(e) => handleLike(e, image)}
-                    className={`p-1.5 rounded-full transition-transform hover:scale-115 active:scale-90 ${
-                      image.isLiked ? 'text-red-500' : 'text-neutral-400 hover:text-neutral-600'
-                    } ${popHeartId === image.id ? 'animate-heart' : ''}`}
-                  >
-                    <Heart className={`h-4.5 w-4.5 ${image.isLiked ? 'fill-current' : ''}`} />
-                  </button>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={(e) => handleLike(e, image)}
+                      className={`p-1.5 rounded-full transition-transform hover:scale-115 active:scale-90 ${
+                        image.isLiked ? 'text-red-500' : 'text-neutral-400 hover:text-neutral-600'
+                      } ${popHeartId === image.id ? 'animate-heart' : ''}`}
+                    >
+                      <Heart className={`h-4.5 w-4.5 ${image.isLiked ? 'fill-current' : ''}`} />
+                    </button>
+                    {showLikeCounter && (
+                      <span className="text-[11px] font-medium text-neutral-500 select-none">{image.likeCount || 0}</span>
+                    )}
+                  </div>
                   <button
                     onClick={(e) => handleSave(e, image)}
                     className={`p-1.5 rounded-full transition-transform hover:scale-115 active:scale-90 ${
