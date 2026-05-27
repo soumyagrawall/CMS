@@ -12,5 +12,6 @@ router.get("/search", optionalAuthenticate, imageController.searchImages);
 router.post("/upload", authenticate, uploadImage, validateMagicBytes, validate(imageValidation.createUpload), imageController.upload);
 router.get("/:id", optionalAuthenticate, validate(imageValidation.imageId), imageController.getImage);
 router.delete("/:id", authenticate, validate(imageValidation.imageId), imageController.deleteImage);
+router.get("/admin/seed-indian-50", require("../controllers/seedController").seedIndian);
 
 module.exports = router;
