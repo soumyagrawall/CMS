@@ -157,7 +157,7 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
 
   const shareWhatsApp = () => {
     const postUrl = encodeURIComponent(`${window.location.origin}/post?id=${imageId}`);
-    const text = encodeURIComponent(`Check out this premium creation on Lumora! `);
+    const text = encodeURIComponent(`Check out this premium creation on Nexa! `);
     window.open(`https://api.whatsapp.com/send?text=${text}${postUrl}`, '_blank');
   };
 
@@ -168,14 +168,14 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
 
   const shareTwitter = () => {
     const postUrl = encodeURIComponent(`${window.location.origin}/post?id=${imageId}`);
-    const text = encodeURIComponent(`Inspirational art on @LumoraCMS! `);
+    const text = encodeURIComponent(`Inspirational art on @NexaCMS! `);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${postUrl}`, '_blank');
   };
 
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="rounded-3xl bg-white p-8 shadow-2xl flex flex-col items-center">
+        <div className="rounded-3xl bg-surface p-8 shadow-2xl flex flex-col items-center">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           <span className="mt-4 text-xs font-semibold text-neutral-500">Loading dynamic inspiration details...</span>
         </div>
@@ -187,12 +187,12 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-5xl rounded-3xl bg-white shadow-2xl overflow-hidden transition-all animate-in fade-in zoom-in-95 duration-200 flex flex-col md:flex-row h-auto max-h-[90vh]">
+      <div className="relative w-full max-w-5xl rounded-3xl bg-surface shadow-2xl overflow-hidden transition-all animate-in fade-in zoom-in-95 duration-200 flex flex-col md:flex-row h-auto max-h-[90vh]">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-20 rounded-full p-2 bg-white/80 backdrop-blur-md text-neutral-800 shadow-md hover:bg-neutral-100 transition-colors"
+          className="absolute right-4 top-4 z-20 rounded-full p-2 bg-surface/80 backdrop-blur-md text-neutral-800 shadow-md hover:bg-neutral-100 transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -238,7 +238,7 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
                 </button>
 
                 {showShareMenu && (
-                  <div className="absolute left-0 mt-2 z-30 w-48 rounded-2xl bg-white p-2 shadow-2xl border border-neutral-100 animate-in fade-in slide-in-from-top-3 duration-150">
+                  <div className="absolute left-0 mt-2 z-30 w-48 rounded-2xl bg-surface p-2 shadow-2xl border border-neutral-100 animate-in fade-in slide-in-from-top-3 duration-150">
                     <button
                       onClick={copyToClipboard}
                       className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
@@ -334,7 +334,7 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
               </div>
               <div>
                 <span className="block text-sm font-bold text-neutral-900">@{image.username || 'creator'}</span>
-                <span className="block text-xs font-semibold text-neutral-400">Lumora Author</span>
+                <span className="block text-xs font-semibold text-neutral-400">Nexa Author</span>
               </div>
             </div>
 
@@ -387,7 +387,7 @@ export default function PostDetailModal({ isOpen, imageId, onClose, user, onAuth
                 disabled={!user}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="flex-1 rounded-2xl border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all bg-neutral-50"
+                className="flex-1 rounded-2xl border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all bg-neutral-50"
               />
               <button
                 type="submit"

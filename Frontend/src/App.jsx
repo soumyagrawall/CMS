@@ -233,7 +233,7 @@ export default function App() {
 
       await api.uploadImage(formData);
       setUploadSuccess(true);
-      setUploadMessage('Post successfully published to Lumora!');
+      setUploadMessage('Post successfully published to Nexa!');
       setUploadFile(null);
       setUploadPreview(null);
       setUploadTitle('');
@@ -290,6 +290,8 @@ export default function App() {
         tags: uploadTags
       });
       setUploadCaption(res.caption);
+      if (!uploadTitle) setUploadTitle("Curated Vintage Aesthetic");
+      if (uploadTags.length === 0) setUploadTags(["vintage", "curation", "editorial", "design"]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -428,175 +430,62 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row antialiased font-sans">
+    <div className="min-h-screen bg-background flex flex-col antialiased font-sans pb-24">
       
-      {/* 2. Left Sidebar Navigation (Restored EXACT design layout as requested!) */}
-      <aside className="hidden md:flex h-screen w-[220px] fixed left-0 top-0 flex-col border-r border-outline-variant bg-white py-6 px-4 justify-between z-40">
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-0.5">
-            <span
-              onClick={() => { setCurrentView(user ? 'feed' : 'explore'); setSearchQuery(''); setFilteredImages(images); }}
-              className="text-2xl font-serif font-black text-primary tracking-tight cursor-pointer"
-            >
-              Lumora
-            </span>
-            <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Editorial Curation</span>
-          </div>
-
-          <nav className="flex flex-col gap-1.5">
-            {user ? (
-              <>
-                <button
-                  onClick={() => { setCurrentView('feed'); setSearchQuery(''); setFilteredImages(images); }}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
-                    currentView === 'feed'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <Home className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Feed</span>
-                </button>
-
-                <button
-                  onClick={() => { setCurrentView('explore'); setSearchQuery(''); setFilteredImages(images); }}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
-                    currentView === 'explore'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <Compass className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Explore</span>
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('create')}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
-                    currentView === 'create'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <Plus className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Create</span>
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('notifications')}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full relative ${
-                    currentView === 'notifications'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <Bell className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Notifications</span>
-                  {notifications.some(n => !n.readAt) && (
-                    <span className="absolute top-2.5 right-3.5 h-2 w-2 bg-primary rounded-full ring-2 ring-white animate-pulse"></span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('profile')}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
-                    currentView === 'profile'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <User className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Profile</span>
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('settings')}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
-                    currentView === 'settings'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <Settings className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Settings</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => { setCurrentView('explore'); setSearchQuery(''); setFilteredImages(images); }}
-                  className={`relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left transition-all duration-150 w-full ${
-                    currentView === 'explore'
-                      ? 'bg-neutral-100/85 text-neutral-900 font-bold border-l-[3.5px] border-primary shadow-sm'
-                      : 'text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low'
-                  }`}
-                >
-                  <Compass className="h-4.5 w-4.5" />
-                  <span className="text-xs font-bold">Explore</span>
-                </button>
-                
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="relative flex items-center gap-3.5 py-2.5 px-4 rounded-xl text-left text-on-surface-variant hover:text-neutral-900 hover:bg-surface-container-low transition-all duration-150 w-full"
-                >
-                  <User className="h-4.5 w-4.5" />
-                  <span className="text-xs font-semibold">Log in / Sign up</span>
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <button
-            onClick={() => setCurrentView('support')}
-            className={`text-left text-[11px] font-bold text-on-surface-variant hover:text-primary transition-colors px-3 py-1 ${
-              currentView === 'support' ? 'text-primary font-black' : ''
-            }`}
-          >
-            Support
-          </button>
-          
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 py-2 px-3 rounded-lg text-left text-neutral-500 hover:text-red-600 hover:bg-red-50 transition-colors duration-150"
-            >
-              <LogOut className="h-4.5 w-4.5" />
-              <span className="text-xs font-semibold">Sign Out</span>
-            </button>
-          )}
-        </div>
-      </aside>
-
-      {/* 3. Mobile Header (Bottom Navbar matches mobile layout!) */}
-      <header className="flex md:hidden justify-between items-center w-full px-6 h-16 sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-outline-variant">
+      {/* Universal Top Header */}
+      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant w-full px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Left: Logo */}
         <span
           onClick={() => { setCurrentView(user ? 'feed' : 'explore'); setSearchQuery(''); setFilteredImages(images); }}
-          className="text-xl font-serif font-black text-primary cursor-pointer"
+          className="text-2xl font-serif font-black text-[#E0D9D9] cursor-pointer flex-shrink-0"
         >
-          Lumora
+          Nexa
         </span>
-        <div className="flex items-center gap-3">
+
+        {/* Center: Search Bar */}
+        {user ? (
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-lg mx-2 md:mx-6">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search aesthetics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-surface-container rounded-full py-2.5 pl-10 pr-4 text-xs font-semibold outline-none border border-outline-variant focus:border-neutral-400 focus:ring-1 focus:ring-secondary-container transition-all text-neutral-800 shadow-sm"
+            />
+          </form>
+        ) : (
+          <div className="flex-1"></div>
+        )}
+
+        {/* Right: Notifications & Profile */}
+        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           {user ? (
             <>
-              <button onClick={() => setCurrentView('notifications')} className="relative p-2 text-neutral-600 hover:bg-neutral-100 rounded-full">
+              <button
+                onClick={() => setCurrentView('notifications')}
+                className="relative p-2 rounded-full hover:bg-surface-container-low text-neutral-400 transition-colors cursor-pointer"
+              >
                 <Bell className="h-5 w-5" />
                 {notifications.some(n => !n.readAt) && (
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full ring-2 ring-[#120E0E] animate-pulse"></span>
                 )}
               </button>
-              <button onClick={() => setCurrentView('profile')} className="p-1 border border-primary rounded-full">
-                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10px] font-serif uppercase">
+
+              <button
+                onClick={() => setCurrentView('profile')}
+                className="flex items-center gap-2 rounded-full border border-outline-variant bg-surface hover:bg-surface-container-low px-2.5 py-1.5 transition-colors cursor-pointer"
+              >
+                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary text-[10px] font-serif uppercase">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
+                <span className="hidden md:inline text-xs font-bold text-[#E0D9D9] pr-1">@{user.username}</span>
               </button>
             </>
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
-              style={{ backgroundColor: '#30578f', color: '#ffffff' }}
-              className="rounded-full px-4 py-2 text-xs font-bold shadow-sm"
+              className="bg-primary text-[#120E0E] rounded-full px-5 py-2 text-xs font-bold shadow-sm transition-all hover:opacity-90"
             >
               Connect
             </button>
@@ -604,72 +493,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* Content Canvas Area (Optimized spacing and removed empty gutter gaps!) */}
-      <main className="flex-1 md:ml-[220px] min-h-screen px-6 py-6 md:px-12 md:py-8 flex flex-col gap-6 bg-background pb-20 md:pb-10">
+      {/* Main Content Canvas */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-8 flex flex-col gap-6 bg-background">
         
-        {/* Sleek top Pinterest Header Row (Spans wide and fills all empty top space beautifully!) */}
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-6 z-10 mb-4 pb-4 border-b border-outline-variant/15">
-          {/* Pinterest-style wide search input */}
-          {user ? (
-            <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-2xl">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-neutral-400" />
-              <input
-                type="text"
-                placeholder="Search aesthetics, minimalist designs, tag pills, or authors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white rounded-full py-3.5 pl-12 pr-6 text-xs font-semibold outline-none border border-outline-variant focus:border-neutral-400 focus:ring-2 focus:ring-secondary-container focus:bg-white transition-all text-neutral-800 shadow-sm"
-              />
-            </form>
-          ) : (
-            <div className="flex-1"></div>
-          )}
-
-          {/* Right side quick actions - elegant and functional to fill blank space */}
-          <div className="hidden md:flex items-center gap-4">
-            {user ? (
-              <>
-                <button
-                  onClick={() => setCurrentView('create')}
-                  style={{ backgroundColor: '#30578f', color: '#ffffff' }}
-                  className="flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-xs font-bold transition-all shadow-sm active:scale-[0.97] hover:opacity-90"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Create</span>
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('notifications')}
-                  className="relative p-2.5 rounded-full border border-outline-variant bg-white hover:bg-neutral-50 text-neutral-600 transition-colors shadow-sm cursor-pointer"
-                >
-                  <Bell className="h-4.5 w-4.5" />
-                  {notifications.some(n => !n.readAt) && (
-                    <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-primary rounded-full ring-2 ring-white animate-pulse"></span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('profile')}
-                  className="flex items-center gap-2 rounded-full border border-outline-variant bg-white hover:bg-neutral-50 px-3.5 py-1.5 transition-colors shadow-sm cursor-pointer hover:border-neutral-300"
-                >
-                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10.5px] font-serif uppercase">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="text-xs font-bold text-neutral-800">@{user.username}</span>
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                style={{ backgroundColor: '#30578f', color: '#ffffff' }}
-                className="rounded-full px-5 py-2.5 text-xs font-bold shadow-sm transition-all active:scale-[0.97] hover:opacity-90"
-              >
-                Connect Creator
-              </button>
-            )}
-          </div>
-        </div>
-
         {loading && (
           <div className="flex justify-center items-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -683,14 +509,7 @@ export default function App() {
               <div className="space-y-6">
                 
                 {/* Header (Dynamic Luxury Curation Headline) */}
-                <header className="max-w-4xl mb-4 md:mb-6">
-                  <h1 className="font-serif text-4.5xl md:text-5xl font-black text-neutral-900 tracking-tight leading-tight mb-2.5">
-                    Curated for You
-                  </h1>
-                  <p className="font-sans text-neutral-500 font-medium text-[12.5px] md:text-[13.5px] leading-relaxed max-w-2xl">
-                    A selection of contemporary aesthetics, textures, and digital artifacts curated by the Lumora community.
-                  </p>
-                </header>
+
 
                 {/* Explore categories pills layout (matches legacy Explore chip filters exactly!) */}
                 {currentView === 'explore' && (
@@ -709,7 +528,7 @@ export default function App() {
                         className={`px-5 py-2.5 rounded-full whitespace-nowrap text-xs font-bold transition-all ${
                           (cat === 'All' && !searchQuery) || searchQuery.toLowerCase() === cat.toLowerCase()
                             ? 'bg-primary text-white shadow-sm'
-                            : 'bg-white border border-outline-variant hover:bg-neutral-50 text-neutral-600'
+                            : 'bg-surface border border-outline-variant hover:bg-neutral-50 text-neutral-600'
                         }`}
                       >
                         {cat}
@@ -878,7 +697,7 @@ export default function App() {
                       }}
                       className={`flex-1 p-5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
                         !notif.readAt
-                          ? 'bg-white border-outline-variant/60 shadow-sm hover:border-neutral-300'
+                          ? 'bg-surface border-outline-variant/60 shadow-sm hover:border-neutral-300'
                           : 'bg-surface-container-low/60 border-transparent hover:bg-surface-container-low'
                       }`}
                     >
@@ -926,7 +745,7 @@ export default function App() {
                             onClick={(e) => handleFollowBack(notif.actorId, e)}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                               isFollowing
-                                ? 'border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-500'
+                                ? 'border border-neutral-300 bg-surface hover:bg-neutral-50 text-neutral-500'
                                 : 'bg-primary hover:bg-primary-container text-white shadow-sm'
                             }`}
                           >
@@ -957,7 +776,7 @@ export default function App() {
                     {notifications.some(n => !n.readAt) && (
                       <button
                         onClick={handleMarkAllNotifications}
-                        className="flex items-center rounded-lg border border-outline-variant bg-white hover:bg-neutral-50 px-4 py-2 text-xs font-bold text-neutral-800 transition-colors shadow-sm cursor-pointer"
+                        className="flex items-center rounded-lg border border-outline-variant bg-surface hover:bg-neutral-50 px-4 py-2 text-xs font-bold text-neutral-800 transition-colors shadow-sm cursor-pointer"
                       >
                         <svg className="w-3.5 h-3.5 mr-1.5 text-neutral-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5M8.25 18l6-6 4.5 4.5" />
@@ -970,7 +789,7 @@ export default function App() {
                   {/* Notification List Container */}
                   <div className="space-y-8">
                     {notifications.length === 0 ? (
-                      <div className="text-center py-20 bg-white rounded-2xl border border-outline-variant p-8 flex flex-col items-center shadow-sm">
+                      <div className="text-center py-20 bg-surface rounded-2xl border border-outline-variant p-8 flex flex-col items-center shadow-sm">
                         <Inbox className="h-12 w-12 text-neutral-300 mb-3" />
                         <p className="text-xs font-bold text-neutral-400 tracking-wider uppercase">Your inbox is clear</p>
                       </div>
@@ -1077,16 +896,33 @@ export default function App() {
                           </span>
                         </div>
 
-                        <button
-                          onClick={() => setCurrentView('settings')}
-                          style={{ backgroundColor: '#30578f', color: '#ffffff' }}
-                          className="rounded-xl px-6 py-2.5 text-[11px] font-bold tracking-wider uppercase transition-all duration-150 active:scale-[0.98] shadow-sm flex items-center gap-1.5 self-center sm:self-auto hover:opacity-90"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                          </svg>
-                          Edit Profile
-                        </button>
+                        <div className="flex items-center gap-2 self-center sm:self-auto mt-2 sm:mt-0">
+                          <button
+                            onClick={() => setCurrentView('support')}
+                            title="Support"
+                            className="bg-surface border border-outline-variant text-[#E0D9D9] hover:bg-surface-container-low rounded-xl px-3 py-2.5 transition-all duration-150 shadow-sm flex items-center justify-center cursor-pointer"
+                          >
+                            <HelpCircle className="w-4 h-4" />
+                          </button>
+                          
+                          <button
+                            onClick={handleLogout}
+                            title="Sign Out"
+                            className="bg-surface border border-outline-variant text-[#E0D9D9] hover:bg-red-900/30 hover:text-red-400 hover:border-red-900/50 rounded-xl px-3 py-2.5 transition-all duration-150 shadow-sm flex items-center justify-center cursor-pointer"
+                          >
+                            <LogOut className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => setCurrentView('settings')}
+                            className="bg-primary text-[#120E0E] rounded-xl px-5 py-2.5 text-[11px] font-bold tracking-wider uppercase transition-all duration-150 active:scale-[0.98] shadow-sm flex items-center gap-1.5 hover:opacity-90 cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>
+                            Edit
+                          </button>
+                        </div>
                       </div>
 
                       {/* Horizontal stats line */}
@@ -1197,7 +1033,7 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 md:p-8 rounded-2xl border border-outline-variant shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-surface p-6 md:p-8 rounded-2xl border border-outline-variant shadow-sm">
                   {/* File selector or AI generator preview */}
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest">Visual Asset</label>
@@ -1234,20 +1070,8 @@ export default function App() {
                   <form onSubmit={handleUploadSubmit} className="space-y-5 flex flex-col">
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Inspiration Title</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Give your creation a descriptive title"
-                          value={uploadTitle}
-                          onChange={(e) => setUploadTitle(e.target.value)}
-                          className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
-                        />
-                      </div>
-
-                      <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest">Caption</label>
+                          <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest">Title</label>
                           <button
                             type="button"
                             onClick={handleAICaption}
@@ -1258,18 +1082,41 @@ export default function App() {
                             {aiCaptioning ? 'Writing...' : 'Write with AI'}
                           </button>
                         </div>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Give your creation a descriptive title"
+                          value={uploadTitle}
+                          onChange={(e) => setUploadTitle(e.target.value)}
+                          className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Caption</label>
                         <textarea
                           placeholder="Tell a short story about this compositions..."
                           value={uploadCaption}
                           onChange={(e) => setUploadCaption(e.target.value)}
                           rows={3}
-                          className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all leading-normal"
+                          className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all leading-normal"
                         />
                       </div>
 
                       {/* Tag Chip input pills */}
                       <div>
-                        <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest mb-1.5">Tags</label>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="block text-xs font-bold text-neutral-600 uppercase tracking-widest">Tags</label>
+                          <button
+                            type="button"
+                            onClick={handleAICaption}
+                            disabled={aiCaptioning}
+                            className="text-[10px] font-bold text-primary hover:opacity-80 flex items-center gap-1"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            {aiCaptioning ? 'Generating...' : 'Write with AI'}
+                          </button>
+                        </div>
                         
                         {uploadTags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mb-2.5">
@@ -1298,7 +1145,7 @@ export default function App() {
                             value={uploadTagInput}
                             onChange={(e) => setUploadTagInput(e.target.value)}
                             onKeyDown={handleTagInputKeyDown}
-                            className="flex-1 rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
+                            className="flex-1 rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all font-semibold"
                           />
                           <button
                             type="button"
@@ -1309,8 +1156,7 @@ export default function App() {
                               }
                               setUploadTagInput('');
                             }}
-                            style={{ backgroundColor: '#30578f' }}
-                            className="hover:bg-[#223f68] text-white px-5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                            className="bg-primary hover:bg-primary/90 text-[#120E0E] px-5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                           >
                             Add
                           </button>
@@ -1322,8 +1168,7 @@ export default function App() {
                       <button
                         type="submit"
                         disabled={uploadLoading}
-                        style={{ backgroundColor: '#30578f' }}
-                        className="w-full rounded-xl hover:bg-[#223f68] py-4 text-xs font-bold text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                        className="w-full bg-primary hover:bg-primary/90 rounded-xl py-4 text-xs font-bold text-[#120E0E] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
                       >
                         {uploadLoading ? 'Publishing...' : 'Publish'}
                       </button>
@@ -1346,13 +1191,13 @@ export default function App() {
                       placeholder="e.g. minimalist brutalist concrete architecture overlooking desert dunes at dusk..."
                       value={aiPrompt}
                       onChange={(e) => setAiPrompt(e.target.value)}
-                      className="flex-1 bg-white/10 rounded-xl px-4 py-3 text-xs outline-none border border-transparent focus:bg-white/15 focus:border-white/20 text-white placeholder:text-neutral-500 font-semibold"
+                      className="flex-1 bg-surface/10 rounded-xl px-4 py-3 text-xs outline-none border border-transparent focus:bg-surface/15 focus:border-white/20 text-white placeholder:text-neutral-500 font-semibold"
                     />
                     <button
                       type="button"
                       onClick={handleAIGenerate}
                       disabled={aiGenerating || !aiPrompt.trim()}
-                      className="bg-white hover:bg-neutral-100 text-neutral-900 rounded-xl px-5 py-3 text-xs font-bold active:scale-[0.98] transition-all flex items-center gap-1.5 shadow-md disabled:opacity-50"
+                      className="bg-surface hover:bg-neutral-100 text-neutral-900 rounded-xl px-5 py-3 text-xs font-bold active:scale-[0.98] transition-all flex items-center gap-1.5 shadow-md disabled:opacity-50"
                     >
                       {aiGenerating ? 'Generating...' : 'Generate & Publish'}
                       <ArrowRight className="h-3.5 w-3.5" />
@@ -1376,7 +1221,7 @@ export default function App() {
                   </div>
                 )}
 
-                <form onSubmit={handleSettingsUpdate} className="bg-white rounded-2xl border border-outline-variant p-6 md:p-8 space-y-4 shadow-sm">
+                <form onSubmit={handleSettingsUpdate} className="bg-surface rounded-2xl border border-outline-variant p-6 md:p-8 space-y-4 shadow-sm">
                   <div className="flex items-center gap-6 mb-6">
                     <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xl font-serif uppercase flex-shrink-0 overflow-hidden border border-outline-variant group">
                       {settingsAvatarPreview ? (
@@ -1427,7 +1272,7 @@ export default function App() {
                       placeholder="Elena Thorne"
                       value={settingsFullName}
                       onChange={(e) => setSettingsFullName(e.target.value)}
-                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
+                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all font-semibold"
                     />
                   </div>
 
@@ -1438,7 +1283,7 @@ export default function App() {
                       value={settingsBio}
                       onChange={(e) => setSettingsBio(e.target.value)}
                       rows={3}
-                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all leading-normal"
+                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all leading-normal"
                     />
                   </div>
 
@@ -1449,7 +1294,7 @@ export default function App() {
                       placeholder="https://example.com"
                       value={settingsWebsite}
                       onChange={(e) => setSettingsWebsite(e.target.value)}
-                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
+                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all font-semibold"
                     />
                   </div>
 
@@ -1460,7 +1305,7 @@ export default function App() {
                       placeholder="Paris, France"
                       value={settingsLocation}
                       onChange={(e) => setSettingsLocation(e.target.value)}
-                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
+                      className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all font-semibold"
                     />
                   </div>
 
@@ -1479,7 +1324,7 @@ export default function App() {
             {currentView === 'support' && (
               <div className="max-w-2xl mx-auto space-y-6 w-full">
                 <h1 className="font-serif text-3xl font-black text-neutral-900 border-b border-outline-variant pb-4 tracking-tight">
-                  Lumora Support Desk
+                  Nexa Support Desk
                 </h1>
 
                 {supportSuccess && (
@@ -1488,7 +1333,7 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="bg-white rounded-2xl border border-outline-variant p-6 md:p-8 space-y-6 shadow-sm">
+                <div className="bg-surface rounded-2xl border border-outline-variant p-6 md:p-8 space-y-6 shadow-sm">
                   <div className="flex gap-4 items-start">
                     <HelpCircle className="h-8 w-8 text-primary flex-shrink-0" />
                     <div>
@@ -1508,7 +1353,7 @@ export default function App() {
                         placeholder="you@domain.com"
                         value={supportEmail}
                         onChange={(e) => setSupportEmail(e.target.value)}
-                        className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all font-semibold"
+                        className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all font-semibold"
                       />
                     </div>
 
@@ -1520,7 +1365,7 @@ export default function App() {
                         value={supportMessage}
                         onChange={(e) => setSupportMessage(e.target.value)}
                         rows={4}
-                        className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-white transition-all leading-normal"
+                        className="w-full rounded-xl border border-outline-variant bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-primary/50 focus:bg-surface transition-all leading-normal"
                       />
                     </div>
 
@@ -1539,7 +1384,7 @@ export default function App() {
       </main>
 
       {/* Mobile bottom navigation bar matching legacy style */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-outline-variant flex justify-around py-3.5 z-40 shadow-lg">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant flex justify-around py-3.5 z-40 shadow-lg">
         <button
           onClick={() => { setCurrentView(user ? 'feed' : 'explore'); setSearchQuery(''); setFilteredImages(images); }}
           className={`flex flex-col items-center gap-1 ${
@@ -1623,6 +1468,41 @@ export default function App() {
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
       />
+
+      {/* Universal Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant z-50 flex items-center justify-around py-3 px-2 sm:px-6 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+        <button
+          onClick={() => { setCurrentView(user ? 'feed' : 'explore'); setSearchQuery(''); setFilteredImages(images); }}
+          className={`flex flex-col items-center gap-1.5 w-16 ${(currentView === 'feed' || (!user && currentView === 'explore')) ? 'text-primary' : 'text-neutral-500 hover:text-neutral-300'}`}
+        >
+          <Home className="h-5 w-5" />
+          <span className="text-[10px] font-bold">Home</span>
+        </button>
+
+        <button
+          onClick={() => { setCurrentView('explore'); setSearchQuery(''); setFilteredImages(images); }}
+          className={`flex flex-col items-center gap-1.5 w-16 ${(currentView === 'explore' && user) ? 'text-primary' : 'text-neutral-500 hover:text-neutral-300'}`}
+        >
+          <Compass className="h-5 w-5" />
+          <span className="text-[10px] font-bold">Explore</span>
+        </button>
+
+        <button
+          onClick={() => { user ? setCurrentView('create') : setShowAuthModal(true); }}
+          className={`flex flex-col items-center gap-1.5 w-16 ${currentView === 'create' ? 'text-primary' : 'text-neutral-500 hover:text-neutral-300'}`}
+        >
+          <Plus className="h-5 w-5" />
+          <span className="text-[10px] font-bold">Create</span>
+        </button>
+
+        <button
+          onClick={() => { user ? setCurrentView('settings') : setShowAuthModal(true); }}
+          className={`flex flex-col items-center gap-1.5 w-16 ${currentView === 'settings' ? 'text-primary' : 'text-neutral-500 hover:text-neutral-300'}`}
+        >
+          <Settings className="h-5 w-5" />
+          <span className="text-[10px] font-bold">Settings</span>
+        </button>
+      </nav>
     </div>
   );
 }

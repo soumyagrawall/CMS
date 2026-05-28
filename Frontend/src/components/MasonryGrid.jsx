@@ -44,7 +44,7 @@ export default function MasonryGrid({ images, user, onPostClick, onTagClick, onL
           
           {/* Consolidated Bounding Card Container */}
           <div
-            className="overflow-hidden rounded-2xl bg-white border border-neutral-200/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 flex flex-col shadow-sm"
+            className="overflow-hidden rounded-2xl bg-surface border border-neutral-200/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 flex flex-col shadow-sm"
           >
             {/* Visual Asset Container */}
             <div
@@ -67,7 +67,7 @@ export default function MasonryGrid({ images, user, onPostClick, onTagClick, onL
             </div>
 
             {/* Bounding Bottom Footer Block - Inside Card Border */}
-            <div className="p-4 bg-white flex flex-col gap-2.5">
+            <div className="p-4 bg-surface flex flex-col gap-2.5">
               
               {/* Post Title */}
               <h3

@@ -42,7 +42,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-surface shadow-2xl transition-all animate-in fade-in zoom-in-95 duration-200">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -53,7 +53,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         <div className="p-8">
           <div className="text-center mb-6">
-            <h2 className="font-serif text-3xl font-bold text-primary tracking-tight">Lumora</h2>
+            <h2 className="font-serif text-3xl font-bold text-primary tracking-tight">Nexa</h2>
             <p className="mt-2 text-sm text-neutral-500 font-medium">
               {isLogin ? 'Sign in to create, like, and save inspirations' : 'Join our creative aesthetic community'}
             </p>
@@ -78,7 +78,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                       placeholder="Evelyn Thorne"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
+                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-primary/50 focus:bg-surface focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
                     />
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                       placeholder="@evelyn_curates"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
+                      className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-primary/50 focus:bg-surface focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
                     />
                   </div>
                 </div>
@@ -110,7 +110,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   placeholder="evelyn@studio.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
+                  className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-primary/50 focus:bg-surface focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
                 />
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-12 text-sm outline-none focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
+                  className="w-full rounded-2xl border border-neutral-200 bg-neutral-50 py-3 pl-11 pr-12 text-sm outline-none focus:border-primary/50 focus:bg-surface focus:ring-2 focus:ring-primary/10 transition-all font-semibold"
                 />
                 
                 {/* Show/Hide Password Toggle */}
