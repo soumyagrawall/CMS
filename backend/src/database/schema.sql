@@ -1,5 +1,3 @@
-CREATE DATABASE IF NOT EXISTS lumora CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE lumora;
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -110,18 +108,4 @@ CREATE TABLE IF NOT EXISTS notifications (
   CONSTRAINT fk_notifications_image FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE SET NULL,
   CONSTRAINT fk_notifications_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE SET NULL,
   INDEX idx_notifications_user_created (user_id, created_at)
-);
-
-CREATE TABLE IF NOT EXISTS analytics_events (
-  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT UNSIGNED NULL,
-  image_id BIGINT UNSIGNED NULL,
-  event_type VARCHAR(40) NOT NULL,
-  metadata JSON NULL,
-  ip_address VARCHAR(64) NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_analytics_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  CONSTRAINT fk_analytics_image FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE SET NULL,
-  INDEX idx_analytics_image_type (image_id, event_type),
-  INDEX idx_analytics_created (created_at)
 );
