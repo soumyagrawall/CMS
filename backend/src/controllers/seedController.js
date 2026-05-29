@@ -268,28 +268,22 @@ const seedIndian = async (req, res) => {
 
     let count = 0;
     if (existing[0].count < 50) {
-      // 4. Insert all seed images in safe parallel batches of 5 to prevent ECONNRESET on S3/Yamabiko proxy
+      // 4. Insert all seed images sequentially (ensures 100% stability on remote databases with strict connection limits)
       const insertedImageIds = [];
-      const batchSize = 5;
-      for (let i = 0; i < seedImages.length; i += batchSize) {
-        const batch = seedImages.slice(i, i + batchSize);
-        const seedPromises = batch.map(async (img) => {
-          const created = await imageModel.create({
-            userId: img.userId,
-            title: img.title,
-            caption: img.caption,
-            imageUrl: img.imageUrl,
-            sourceType: "upload",
-            tags: img.tags
-          });
-          return created.id;
+      for (const img of seedImages) {
+        const created = await imageModel.create({
+          userId: img.userId,
+          title: img.title,
+          caption: img.caption,
+          imageUrl: img.imageUrl,
+          sourceType: "upload",
+          tags: img.tags
         });
-        const batchImageIds = await Promise.all(seedPromises);
-        insertedImageIds.push(...batchImageIds);
+        insertedImageIds.push(created.id);
+        count++;
       }
-      count = insertedImageIds.length;
       
-      // 5. Add comments to some posts in parallel
+      // 5. Add comments to some posts sequentially
       const sampleComments = [
         "Absolutely stunning!",
         "Love the colors here.",
@@ -303,7 +297,6 @@ const seedIndian = async (req, res) => {
         "So calming to look at."
       ];
       
-      const commentPromises = [];
       let commentCount = 0;
       for (const imgId of insertedImageIds) {
         // 30% chance to have a comment
@@ -312,17 +305,14 @@ const seedIndian = async (req, res) => {
           for (let i = 0; i < numComments; i++) {
             const randomUserId = seedCreators[Math.floor(Math.random() * seedCreators.length)].id;
             const randomComment = sampleComments[Math.floor(Math.random() * sampleComments.length)];
-            commentPromises.push(
-              pool.execute(
-                `INSERT INTO comments (image_id, user_id, body) VALUES (?, ?, ?)`,
-                [imgId, randomUserId, randomComment]
-              )
+            await pool.execute(
+              `INSERT INTO comments (image_id, user_id, body) VALUES (?, ?, ?)`,
+              [imgId, randomUserId, randomComment]
             );
             commentCount++;
           }
         }
       }
-      await Promise.all(commentPromises);
       console.log(`Inserted ${commentCount} comments on seeded images.`);
     }
 
