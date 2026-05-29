@@ -9,6 +9,15 @@ const startServer = async () => {
     try {
       await testConnection();
       console.log("MySQL connection verified");
+
+      // Clean up the incorrect placeholder seed image showing a cat statue instead of cricket
+      const { pool } = require("./config/database");
+      try {
+        await pool.execute("DELETE FROM images WHERE title = 'Virat Kohli Cover Drive'");
+        console.log("Database clean-up successful: Virat Kohli Cover Drive placeholder image removed.");
+      } catch (dbErr) {
+        console.error("Database clean-up failed:", dbErr.message);
+      }
     } catch (error) {
       console.warn(`MySQL not connected yet: ${error.message}`);
       console.warn("Starting API anyway so frontend/backend can run while database setup is pending.");

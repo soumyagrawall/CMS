@@ -35,7 +35,7 @@ const seedCreators = [
 
 const seedImages = [
   // ─── INDIAN CRICKET ───
-  { userId: 1003, title: "Virat Kohli Cover Drive", caption: "The king plays a stunning cover drive at Wankhede.", imageUrl: "https://loremflickr.com/800/1000/cricket,india?lock=1148", tags: ["cricket", "india", "sports", "virat"] },
+  { userId: 1003, title: "Virat Kohli Cover Drive", caption: "The king plays a stunning cover drive at Wankhede.", imageUrl: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop", tags: ["cricket", "india", "sports", "virat"] },
   { userId: 1003, title: "Cricket Stadium Lights", caption: "The electric atmosphere of an IPL night match.", imageUrl: "https://loremflickr.com/800/1000/cricket,stadium?lock=1196", tags: ["cricket", "stadium", "ipl", "sports"] },
   { userId: 1003, title: "Gully Cricket", caption: "Kids playing cricket in the narrow lanes of Old Delhi.", imageUrl: "https://loremflickr.com/800/1000/cricket,india?lock=1244", tags: ["cricket", "india", "street", "kids"] },
   { userId: 1003, title: "Cricket Bat & Ball", caption: "The tools of the gentleman's game.", imageUrl: "https://loremflickr.com/800/1000/cricket,sports?lock=1292", tags: ["cricket", "sports", "closeup", "equipment"] },
