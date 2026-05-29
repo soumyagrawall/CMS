@@ -12,7 +12,7 @@ const env = {
     port: Number(process.env.MYSQLPORT || process.env.DB_PORT || 3306),
     user: process.env.MYSQLUSER || process.env.DB_USER || "root",
     password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
-    database: process.env.MYSQLDATABASE || process.env.DB_NAME || "lumora",
+    database: process.env.MYSQLDATABASE || process.env.DB_NAME || "nexa",
     connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10)
   },
   jwt: {
@@ -23,7 +23,7 @@ const env = {
   uploadDir: process.env.UPLOAD_DIR || "uploads/images",
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB || 8),
   demoAuthEnabled: process.env.DEMO_AUTH_ENABLED !== "false",
-  demoEmail: process.env.DEMO_EMAIL || "demo@lumora.test",
+  demoEmail: process.env.DEMO_EMAIL || "demo@nexa.test",
   demoPassword: process.env.DEMO_PASSWORD || "demo12345",
   ai: {
     provider: process.env.AI_PROVIDER || "mock",

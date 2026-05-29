@@ -47,7 +47,7 @@ app.use(
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.get("/health", (req, res) => {
-  res.json({ success: true, status: "ok", message: "Lumora API is healthy" });
+  res.json({ success: true, status: "ok", message: "Nexa API is healthy" });
 });
 
 app.use("/api/v1", routes);

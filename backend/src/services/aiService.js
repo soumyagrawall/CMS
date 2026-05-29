@@ -17,7 +17,7 @@ const generateImage = async ({ prompt, style }) => {
 const generateCaption = async ({ prompt, title, tags = [] }) => {
   const tagText = tags.length ? ` with notes of ${tags.join(", ")}` : "";
   return {
-    caption: `${title || "This piece"} explores ${prompt.toLowerCase()}${tagText}, composed with Lumora's editorial eye.`,
+    caption: `${title || "This piece"} explores ${prompt.toLowerCase()}${tagText}, composed with Nexa's editorial eye.`,
     provider: env.ai.provider
   };
 };

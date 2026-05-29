@@ -1,22 +1,22 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api/v1` : "/api/v1";
 
-const getToken = () => localStorage.getItem("lumora_token");
+const getToken = () => localStorage.getItem("nexa_token");
 const getUser = () => {
   try {
-    return JSON.parse(localStorage.getItem("lumora_user") || "null");
+    return JSON.parse(localStorage.getItem("nexa_user") || "null");
   } catch {
     return null;
   }
 };
 
 const setSession = (token, user) => {
-  localStorage.setItem("lumora_token", token);
-  localStorage.setItem("lumora_user", JSON.stringify(user));
+  localStorage.setItem("nexa_token", token);
+  localStorage.setItem("nexa_user", JSON.stringify(user));
 };
 
 const clearSession = () => {
-  localStorage.removeItem("lumora_token");
-  localStorage.removeItem("lumora_user");
+  localStorage.removeItem("nexa_token");
+  localStorage.removeItem("nexa_user");
 };
 
 const request = async (path, options = {}) => {
@@ -95,7 +95,7 @@ export const api = {
   getMe: async () => {
     try {
       const data = await request("/auth/me");
-      localStorage.setItem("lumora_user", JSON.stringify(data.user));
+      localStorage.setItem("nexa_user", JSON.stringify(data.user));
       return data.user;
     } catch (err) {
       clearSession();
