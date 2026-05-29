@@ -4,7 +4,7 @@
   "description": "Root package for Railway deployment",
   "private": true,
   "scripts": {
-    "install": "npm run install:backend && npm run install:frontend",
+    "postinstall": "npm run install:backend && npm run install:frontend",
     "install:backend": "cd backend && npm install",
     "install:frontend": "cd Frontend && npm install",
     "build": "cd Frontend && npm run build",
