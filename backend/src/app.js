@@ -25,7 +25,9 @@ app.use(helmet({
         "blob:", 
         "https://images.unsplash.com", 
         "https://lh3.googleusercontent.com", 
-        "*.amazonaws.com"
+        "*.amazonaws.com",
+        "https://picsum.photos",
+        "https://fastly.picsum.photos"
       ],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
