@@ -130,7 +130,8 @@ const listFeed = async (viewerId, limit, offset, type = 'explore') => {
 };
 
 const search = async (term, limit, offset, viewerId = 0) => {
-  const like = `%${term}%`;
+  const cleanTerm = term.trim().replace(/^#/, "");
+  const like = `%${cleanTerm}%`;
   const vId = viewerId || 0;
   const [rows] = await pool.query(
     `SELECT DISTINCT ${imageSelect},
@@ -141,7 +142,7 @@ const search = async (term, limit, offset, viewerId = 0) => {
      LEFT JOIN image_tags it ON it.image_id = i.id
      LEFT JOIN tags t ON t.id = it.tag_id
      WHERE i.deleted_at IS NULL
-       AND (i.title LIKE :like OR i.caption LIKE :like OR t.name LIKE :like)
+       AND (i.title LIKE :like OR i.caption LIKE :like OR t.name LIKE :like OR u.username LIKE :like OR u.full_name LIKE :like)
      ORDER BY i.created_at DESC
      LIMIT :limit OFFSET :offset`,
     { like, limit, offset, vId }
