@@ -268,19 +268,25 @@ const seedIndian = async (req, res) => {
 
     let count = 0;
     if (existing[0].count < 50) {
-      // 4. Insert all seed images in parallel
-      const seedPromises = seedImages.map(async (img) => {
-        const created = await imageModel.create({
-          userId: img.userId,
-          title: img.title,
-          caption: img.caption,
-          imageUrl: img.imageUrl,
-          sourceType: "upload",
-          tags: img.tags
+      // 4. Insert all seed images in safe parallel batches of 5 to prevent ECONNRESET on S3/Yamabiko proxy
+      const insertedImageIds = [];
+      const batchSize = 5;
+      for (let i = 0; i < seedImages.length; i += batchSize) {
+        const batch = seedImages.slice(i, i + batchSize);
+        const seedPromises = batch.map(async (img) => {
+          const created = await imageModel.create({
+            userId: img.userId,
+            title: img.title,
+            caption: img.caption,
+            imageUrl: img.imageUrl,
+            sourceType: "upload",
+            tags: img.tags
+          });
+          return created.id;
         });
-        return created.id;
-      });
-      const insertedImageIds = await Promise.all(seedPromises);
+        const batchImageIds = await Promise.all(seedPromises);
+        insertedImageIds.push(...batchImageIds);
+      }
       count = insertedImageIds.length;
       
       // 5. Add comments to some posts in parallel
