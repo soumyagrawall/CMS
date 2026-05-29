@@ -11,37 +11,56 @@ const run = async () => {
     process.exit(1);
   }
 
-  console.log('Reading seed_massive.sql...');
-  const seedPath = path.resolve(__dirname, 'backend', 'src', 'database', 'seed_massive.sql');
-  if (!fs.existsSync(seedPath)) {
-    console.error(`Error: Seed file not found at ${seedPath}`);
+  console.log('Connecting to Railway MySQL database for curated clean rebuild...');
+  
+  // Parse Connection URL
+  let host, port, user, password, database;
+  try {
+    if (connectionUrl.startsWith('mysql://')) {
+      const match = connectionUrl.match(/mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+      if (match) {
+        user = decodeURIComponent(match[1]);
+        password = decodeURIComponent(match[2]);
+        host = match[3];
+        port = match[4];
+        database = match[5];
+      } else {
+        throw new Error("Invalid MySQL URI format");
+      }
+    } else {
+      throw new Error("URL must start with mysql://");
+    }
+  } catch (err) {
+    console.error('Failed to parse Railway Connection URL:', err.message);
     process.exit(1);
   }
 
-  const sql = fs.readFileSync(seedPath, 'utf8');
+  console.log(`Connection details parsed:`);
+  console.log(` - Host: ${host}`);
+  console.log(` - Port: ${port}`);
+  console.log(` - User: ${user}`);
+  console.log(` - Database: ${database}`);
 
-  console.log('Connecting to Railway MySQL database...');
-  let connection;
-  try {
-    connection = await mysql.createConnection({
-      uri: connectionUrl,
-      multipleStatements: true
-    });
-    console.log('Connected successfully!');
-  } catch (err) {
-    console.error('Failed to connect to Railway database:', err.message);
+  // Inject Railway credentials into environment variables for rebuild script
+  process.env.MYSQLHOST = host;
+  process.env.MYSQLPORT = port;
+  process.env.MYSQLUSER = user;
+  process.env.MYSQLPASSWORD = password;
+  process.env.MYSQLDATABASE = database;
+  process.env.NODE_ENV = 'production';
+  process.env.REQUIRE_DB_ON_START = 'false';
+
+  // Run the rebuild script programmatically
+  console.log('\nTriggering database clean curated seeding routine...');
+  const rebuildScriptPath = path.resolve(__dirname, 'backend', 'scripts', 'rebuild_db_clean.js');
+  
+  if (!fs.existsSync(rebuildScriptPath)) {
+    console.error(`Error: Rebuild script not found at ${rebuildScriptPath}`);
     process.exit(1);
   }
 
-  try {
-    console.log('Executing seed script (this might take a few seconds)...');
-    await connection.query(sql);
-    console.log('Database successfully seeded with 100 images, users, tags, comments, likes, saves, and follows! 🎉');
-  } catch (err) {
-    console.error('Failed to run seed script:', err.message);
-  } finally {
-    await connection.end();
-  }
+  // Load and execute rebuild script
+  require(rebuildScriptPath);
 };
 
 run();

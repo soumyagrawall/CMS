@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const mysql = require('mysql2/promise');
 
 const run = async () => {
   const connectionUrl = process.argv[2];
@@ -10,55 +9,47 @@ const run = async () => {
     process.exit(1);
   }
 
-  console.log('Reading seed_massive.sql...');
-  const seedPath = path.resolve(__dirname, '..', 'src', 'database', 'seed_massive.sql');
-  if (!fs.existsSync(seedPath)) {
-    console.error(`Error: Seed file not found at ${seedPath}`);
-    process.exit(1);
-  }
-
-  const sql = fs.readFileSync(seedPath, 'utf8');
-
-  console.log('Connecting to Railway MySQL database...');
-  let connection;
+  console.log('Connecting to Railway MySQL database for curated clean rebuild...');
+  
+  let host, port, user, password, database;
   try {
-    let config = {
-      multipleStatements: true
-    };
-
     if (connectionUrl.startsWith('mysql://')) {
       const match = connectionUrl.match(/mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
       if (match) {
-        config.user = decodeURIComponent(match[1]);
-        config.password = decodeURIComponent(match[2]);
-        config.host = match[3];
-        config.port = parseInt(match[4], 10);
-        config.database = match[5];
+        user = decodeURIComponent(match[1]);
+        password = decodeURIComponent(match[2]);
+        host = match[3];
+        port = match[4];
+        database = match[5];
       } else {
-        config.uri = connectionUrl;
+        throw new Error("Invalid MySQL URI format");
       }
     } else {
-      config.uri = connectionUrl;
+      throw new Error("URL must start with mysql://");
     }
-
-    console.log(`Connecting to Host: ${config.host || 'URI'}, Port: ${config.port || 'default'}, User: ${config.user || 'default'}, Database: ${config.database || 'default'}...`);
-
-    connection = await mysql.createConnection(config);
-    console.log('Connected successfully!');
   } catch (err) {
-    console.error('Failed to connect to Railway database:', err.message);
+    console.error('Failed to parse Railway Connection URL:', err.message);
     process.exit(1);
   }
 
-  try {
-    console.log('Executing seed script (this might take a few seconds)...');
-    await connection.query(sql);
-    console.log('Database successfully seeded with 100 images, users, tags, comments, likes, saves, and follows! 🎉');
-  } catch (err) {
-    console.error('Failed to run seed script:', err.message);
-  } finally {
-    await connection.end();
+  // Inject Railway credentials into environment variables
+  process.env.MYSQLHOST = host;
+  process.env.MYSQLPORT = port;
+  process.env.MYSQLUSER = user;
+  process.env.MYSQLPASSWORD = password;
+  process.env.MYSQLDATABASE = database;
+  process.env.NODE_ENV = 'production';
+  process.env.REQUIRE_DB_ON_START = 'false';
+
+  console.log('\nTriggering database clean curated seeding routine...');
+  const rebuildScriptPath = path.resolve(__dirname, 'rebuild_db_clean.js');
+  
+  if (!fs.existsSync(rebuildScriptPath)) {
+    console.error(`Error: Rebuild script not found at ${rebuildScriptPath}`);
+    process.exit(1);
   }
+
+  require(rebuildScriptPath);
 };
 
 run();
