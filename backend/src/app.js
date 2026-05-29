@@ -23,16 +23,14 @@ app.use(helmet({
         "'self'", 
         "data:", 
         "blob:", 
-        "https://images.unsplash.com", 
-        "https://lh3.googleusercontent.com", 
-        "*.amazonaws.com",
-        "https://picsum.photos",
-        "https://fastly.picsum.photos"
+        "https:", 
+        "http:", 
+        "*"
       ],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'"]
+      connectSrc: ["'self'", "https:", "http:", "ws:", "wss:"]
     }
   }
 }));

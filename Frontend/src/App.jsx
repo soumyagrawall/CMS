@@ -512,7 +512,7 @@ export default function App() {
 
 
                 {/* Explore categories pills layout (matches legacy Explore chip filters exactly!) */}
-                {currentView === 'explore' && (
+                {currentView === 'explore' && user && (
                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1.5 border-b border-outline-variant/30">
                     {['All', 'Cricket', 'Travel', 'Food', 'Bollywood', 'Wildlife', 'Festival', 'Coding', 'Marvel', 'Pets', 'Nature', 'Art', 'Architecture'].map(cat => (
                       <button
