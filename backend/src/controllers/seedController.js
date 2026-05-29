@@ -268,9 +268,8 @@ const seedIndian = async (req, res) => {
 
     let count = 0;
     if (existing[0].count < 50) {
-      // 4. Insert all seed images
-      const insertedImageIds = [];
-      for (const img of seedImages) {
+      // 4. Insert all seed images in parallel
+      const seedPromises = seedImages.map(async (img) => {
         const created = await imageModel.create({
           userId: img.userId,
           title: img.title,
@@ -279,11 +278,12 @@ const seedIndian = async (req, res) => {
           sourceType: "upload",
           tags: img.tags
         });
-        insertedImageIds.push(created.id);
-        count++;
-      }
+        return created.id;
+      });
+      const insertedImageIds = await Promise.all(seedPromises);
+      count = insertedImageIds.length;
       
-      // 5. Add comments to some posts
+      // 5. Add comments to some posts in parallel
       const sampleComments = [
         "Absolutely stunning!",
         "Love the colors here.",
@@ -297,6 +297,7 @@ const seedIndian = async (req, res) => {
         "So calming to look at."
       ];
       
+      const commentPromises = [];
       let commentCount = 0;
       for (const imgId of insertedImageIds) {
         // 30% chance to have a comment
@@ -305,14 +306,17 @@ const seedIndian = async (req, res) => {
           for (let i = 0; i < numComments; i++) {
             const randomUserId = seedCreators[Math.floor(Math.random() * seedCreators.length)].id;
             const randomComment = sampleComments[Math.floor(Math.random() * sampleComments.length)];
-            await pool.execute(
-              `INSERT INTO comments (image_id, user_id, body) VALUES (?, ?, ?)`,
-              [imgId, randomUserId, randomComment]
+            commentPromises.push(
+              pool.execute(
+                `INSERT INTO comments (image_id, user_id, body) VALUES (?, ?, ?)`,
+                [imgId, randomUserId, randomComment]
+              )
             );
             commentCount++;
           }
         }
       }
+      await Promise.all(commentPromises);
       console.log(`Inserted ${commentCount} comments on seeded images.`);
     }
 
